@@ -9,7 +9,7 @@
  * published by the Free Software Foundation.
  *
  */
- 
+
 #include <common.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/gpio.h>
@@ -55,7 +55,7 @@ static void smc9115_pre_init(void)
         cs1 = SROM_BW_REG & ~(0xF<<4);
 	cs1 |= ((1 << 0) |
 		(0 << 2) |
-		(1 << 3)) << 4;                
+		(1 << 3)) << 4;
 
         SROM_BW_REG = cs1;
 
@@ -143,7 +143,7 @@ int board_init(void)
 	/* check half synchronizer for asynchronous bridge */
 	if(*(unsigned int *)(0x10010350) == 0x1)
 		printf("Using half synchronizer for asynchronous bridge\n");
-	
+
 #ifdef CONFIG_SMC911X
 	smc9115_pre_init();
 #endif
@@ -179,7 +179,7 @@ int board_init(void)
 int dram_init(void)
 {
 	//gd->ram_size = get_ram_size((long *)PHYS_SDRAM_1, PHYS_SDRAM_1_SIZE);
-	
+
 	return 0;
 }
 
@@ -213,11 +213,19 @@ int board_eth_init(bd_t *bis)
 int checkboard(void)
 {
 	printf("Board:\tSMDKV310\n");
-	
+
 	return 0;
 
 }
 #endif
+
+
+
+#define CONFIG_BOOT_AUTOCOMMAND	\
+		"mmc erase user 0 0 0;"	\
+		"fdisk -c 0 300 14000 200;"					\
+		"fastboot;"					\
+
 
 int board_late_init (void)
 {
@@ -231,6 +239,32 @@ int board_late_init (void)
 		setenv ("bootcmd", CONFIG_BOOTCOMMAND2);
 	}
 #endif
+
+	#if 1  //zxh
+	GPIO_Init();
+	/* Init GPIO key for polling special key */
+	/* printf("board_late_init, init GPIO key\n");*/
+	GPIO_SetFunctionEach(eGPIO_X1, eGPIO_0, 0);
+	GPIO_SetPullUpDownEach(eGPIO_X1, eGPIO_0,0);
+
+	GPIO_SetFunctionEach(eGPIO_X2, eGPIO_0, 0);	/* SW Key1*/
+	GPIO_SetPullUpDownEach(eGPIO_X2, eGPIO_0,3);
+	GPIO_SetFunctionEach(eGPIO_X2, eGPIO_1, 0);	/* SW Key2*/
+	GPIO_SetPullUpDownEach(eGPIO_X2, eGPIO_1,3);
+	//run_command("fdisk -c 0",0);
+	printf("check fastboot mode\n");
+	if((GPIO_GetDataAll(eGPIO_X2) & 0x1) == 0)	{
+		printf("enter fastboot mode\n");
+		char boot_cmd[100];
+		/* Polling Hot key(SW key1), if press this key then directly enter fastboot mode*/
+		//sprintf(boot_cmd, CONFIG_BOOT_AUTOCOMMAND);
+		sprintf(boot_cmd, "fastboot");
+		setenv("bootcmd", boot_cmd);
+		sprintf(boot_cmd, "0");
+		setenv("bootdelay", boot_cmd);
+	}
+	#endif
+
 
 #ifdef CONFIG_CPU_EXYNOS4X12
 	if(INF_REG4_REG == 0xf)

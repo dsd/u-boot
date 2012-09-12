@@ -735,6 +735,9 @@ void pmic_init(void)
 		/* LDO24 CTRL1 3.3 V*/
 		IIC0_EWrite(MAX77686_ADDR, 0x57, 0xF2);
 
+		/*Set MRSTB Register: Program the Manual Reset ON/OFF and Debounce Timer*/
+		IIC0_EWrite(MAX77686_ADDR, 0x0A, 0x08);
+
 	}
 
 	GPA1PUD |= (0x5<<4);	// restore reset value: Pull Up/Down Enable SCL, SDA

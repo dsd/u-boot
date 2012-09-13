@@ -215,6 +215,16 @@ static __inline__ int abortboot(int bootdelay)
 {
 	int abort = 0;
 
+  int tmp;
+  tmp=*(int *)0x11000c08;
+  *(int *)0x11000c08=(tmp&(~0xc0))|0xc0;
+  udelay(10000);
+  if ((*(int *)0x11000c04 & 0x08)==0x08)
+    *(int *)0x40fffff0=0x5aa555aa;
+  else
+    *(int *)0x40fffff0=0x00000000;
+  *(int *)0x11000c08=tmp;
+
 #ifdef CONFIG_MENUPROMPT
 	printf(CONFIG_MENUPROMPT);
 #else

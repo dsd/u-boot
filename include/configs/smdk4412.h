@@ -94,9 +94,9 @@
 /* bus clock: 100Mhz, DMC clock 200Mhz */
 //#define CONFIG_CLK_BUS_DMC_100_200
 /* bus clock: 165Mhz, DMC clock 330Mhz */
-#define CONFIG_CLK_BUS_DMC_165_330
+//#define CONFIG_CLK_BUS_DMC_165_330
 /* bus clock: 200Mhz, DMC clock 400Mhz */
-//#define CONFIG_CLK_BUS_DMC_200_400
+#define CONFIG_CLK_BUS_DMC_200_400
 /* bus clock: 220Mhz, DMC clock 440Mhz */
 //#define CONFIG_CLK_BUS_DMC_220_440
 #endif

@@ -19,9 +19,10 @@
 #define		_100MB				(100*1024*1024)
 #define		_8_4GB				(1023*254*63)
 	
-#define		SYSTEM_PART_SIZE		(300*1024*1024)
+#define		SYSINFO_PART_SIZE		(128*1024*1024)
+#define		SYSTEM_PART_SIZE		(512*1024*1024)
 #define		USER_DATA_PART_SIZE		(300*1024*1024)
-#define		CACHE_PART_SIZE			(300*1024*1024)
+#define		CACHE_PART_SIZE			(520*1024*1024)
 
 #define		CHS_MODE			0
 #define		LBA_MODE			!(CHS_MODE)
@@ -244,7 +245,7 @@ int make_mmc_partition(int total_block_count, unsigned char *mbr, int flag, char
 	if (flag)
 		block_offset = calc_unit((unsigned long long)simple_strtoul(argv[3], NULL, 0)*1024*1024, sdInfo);
 	else
-		block_offset = calc_unit(SYSTEM_PART_SIZE, sdInfo);
+		block_offset = calc_unit(SYSINFO_PART_SIZE, sdInfo);
 
 	partInfo[0].bootable	= 0x00;
 	partInfo[0].partitionId	= 0x83;
@@ -256,7 +257,7 @@ int make_mmc_partition(int total_block_count, unsigned char *mbr, int flag, char
 	if (flag)
 		block_offset = calc_unit((unsigned long long)simple_strtoul(argv[4], NULL, 0)*1024*1024, sdInfo);
 	else
-		block_offset = calc_unit(USER_DATA_PART_SIZE, sdInfo);
+		block_offset = calc_unit(SYSTEM_PART_SIZE, sdInfo);
 	
 	partInfo[1].bootable	= 0x00;
 	partInfo[1].partitionId	= 0x83;
@@ -280,7 +281,7 @@ int make_mmc_partition(int total_block_count, unsigned char *mbr, int flag, char
 	block_offset = BLOCK_END;
 
 	partInfo[3].bootable	= 0x00;
-	partInfo[3].partitionId	= 0x0C;
+	partInfo[3].partitionId	= 0x83;
 
 	make_partitionInfo(block_start, block_offset, sdInfo, &partInfo[3]);
 
@@ -288,11 +289,11 @@ int make_mmc_partition(int total_block_count, unsigned char *mbr, int flag, char
 	memset(mbr, 0x00, sizeof(mbr));
 	mbr[510] = 0x55; mbr[511] = 0xAA;
 	
-	encode_partitionInfo(partInfo[0], &mbr[0x1CE]);
-	encode_partitionInfo(partInfo[1], &mbr[0x1DE]);
+	encode_partitionInfo(partInfo[0], &mbr[0x1BE]);
+	encode_partitionInfo(partInfo[1], &mbr[0x1CE]);
+	encode_partitionInfo(partInfo[3], &mbr[0x1DE]);
 	encode_partitionInfo(partInfo[2], &mbr[0x1EE]);
-	encode_partitionInfo(partInfo[3], &mbr[0x1BE]);
-	
+
 	return 0;
 }
 
@@ -504,7 +505,7 @@ int do_fdisk(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	else
 	{
 		printf("Usage:\nfdisk <-p> <device_num>\n");
-		printf("fdisk <-c> <device_num> [<sys. part size(MB)> <user data part size> <cache part size>]\n");
+		printf("fdisk <-c> <device_num> [<sysinfo part size(MB)> <system data part size> <cache part size>]\n");
 	}
 	return 0;
 }
@@ -513,6 +514,6 @@ U_BOOT_CMD(
 	fdisk, 6, 0, do_fdisk,
 	"fdisk\t- fdisk for sd/mmc.\n",
 	"-c <device_num>\t- create partition.\n"
-	"fdisk -p <device_num> [<sys. part size(MB)> <user data part size> <cache part size>]\t- print partition information\n"
+	"fdisk -p <device_num> [<sysinfo part size(MB)> <system part size(MB)> <user data part size> <cache part size>]\t- print partition information\n"
 );
 

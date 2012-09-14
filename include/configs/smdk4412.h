@@ -44,6 +44,7 @@
 #define CONFIG_EXYNOS4412	1
 #define CONFIG_EXYNOS4412_EVT1	1
 //#define CONFIG_EXYNOS4412_EVT2	1
+#define CONFIG_W30_DVT 1
 
 //#define CONFIG_S5M8767A
 
@@ -200,6 +201,9 @@
 #define CONFIG_CMD_EXT2
 #define CONFIG_CMD_FAT
 
+#define CONFIG_MD5
+#define CONFIG_CMD_MD5SUM
+
 #define CONFIG_SYS_NAND_QUIET_TEST
 #define CONFIG_SYS_ONENAND_QUIET_TEST
 
@@ -229,11 +233,14 @@
 
 #define CONFIG_BOOTDELAY	3
 /* Default boot commands for Android booting. */
+#define CONFIG_BOOTCOMMAND	"run reserved;movi read kernel 0 40008000;movi read rootfs 0 41000000;bootm 40008000 41000000"
+/*
 #ifdef CONFIG_SECURE_BOOT
-#define CONFIG_BOOTCOMMAND	"emmc open 0; movi read zero fwbl1 0 40000000; emmc close 0; movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
+#define CONFIG_BOOTCOMMAND	"emmc open 0; movi read fwbl1 0 40000000; emmc close 0; movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
 #else
 #define CONFIG_BOOTCOMMAND	"movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
 #endif
+*/
 #define CONFIG_BOOTARGS	""
 
 #define CONFIG_BOOTCOMMAND2	\
@@ -252,9 +259,33 @@
 		"mmc read 1 48000000 160000 a0000;"					\
 		"fastboot flash cache 48000000;"					\
 		"reset"
-
+/*
 #define CONFIG_BOOTCOMMAND3	"ext3format mmc 0:3;ext3format mmc 0:4;"		\
 				"movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
+*/
+#define CONFIG_BOOTCMD_FUSE_BOOTLOADER	\
+		"mmc erase boot 0 0 4096;"	\
+		"mmc erase user 0 0 400000000;"	\
+		"movi r f 1 41000000;"	\
+		"movi r b 1 41100000;"	\
+		"movi r u 1 41200000;"	\
+		"movi r t 1 41300000;"	\
+		"emmc open 0;"	\
+		"movi w z f 0 41000000;"	\
+		"movi w z b 0 41100000;"	\
+		"movi w z u 0 41200000;"	\
+		"movi w z t 0 41300000;"	\
+		"emmc close 0;"
+
+#define CONFIG_BOOTCMD_FUSE_RELEASE	\
+		"if mmc read 1 47000000 1000 8; then source 47000000; fi;"	\
+		"if ext2load mmc 1:2 47000000 /mprelease.img 1000; then source 47000000; fi;"	\
+		"if fatload mmc 1:1 47000000 /mprelease.img 1000; then source 47000000; fi;"
+
+#define CONFIG_BOOTCMD_RECOVERY	\
+		"movi read recoverykernel 0 40008000;" \
+		"movi read recovery 0 41000000;" \
+		"bootm 40008000 41000000"
 
 /*
  * Miscellaneous configurable options
@@ -318,7 +349,7 @@
 #define CONFIG_SYS_MONITOR_LEN		(256 << 10)	/* 256 KiB */
 #define CONFIG_IDENT_STRING		" for SMDK4412"
 
-#define CONFIG_ENABLE_MMU
+//#define CONFIG_ENABLE_MMU
 
 #ifdef CONFIG_ENABLE_MMU
 #define CONFIG_SYS_MAPPED_RAM_BASE	0xc0000000
@@ -341,7 +372,7 @@
 #define CFG_FASTBOOT_ADDR_RAMDISK               (0x40800000)
 #define CFG_FASTBOOT_PAGESIZE                   (2048)  // Page size of booting device
 #define CFG_FASTBOOT_SDMMC_BLOCKSIZE            (512)   // Block size of sdmmc
-#define CFG_PARTITION_START			(0x4000000)
+#define CFG_PARTITION_START			(0x6400000)
 
 /* Just one BSP type should be defined. */
 #if defined(CONFIG_CMD_ONENAND) | defined(CONFIG_CMD_NAND) | defined(CONFIG_CMD_MOVINAND)

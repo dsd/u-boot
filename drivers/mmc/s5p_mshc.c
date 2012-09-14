@@ -50,6 +50,12 @@ DECLARE_GLOBAL_DATA_PTR;
 #define mdelay(x)	udelay(1000*x)
 #endif
 
+#if defined(CONFIG_W30_DVT)
+extern unsigned int second_boot_info;
+extern int bl_current;
+extern void bl_control(int status);
+#endif
+
 struct mmc mshc_channel[MMC_MAX_CHANNEL];
 
 struct mshci_host mshc_host[MMC_MAX_CHANNEL];
@@ -447,6 +453,10 @@ s5p_mshc_send_command(struct mmc *mmc, struct mmc_cmd *cmd,
 		} else {		
 			printf("unexpected condition 0x%x\n",mask);
 		}
+#if defined(CONFIG_W30_DVT)
+		if (second_boot_info == 1)
+			bl_control(!bl_current);
+#endif
 		/* make sure disable IDMAC and IDMAC_Interrupts */
 		mshci_writel(host, (mshci_readl(host, MSHCI_CTRL) & 
 				~(DMA_ENABLE|ENABLE_IDMAC)), MSHCI_CTRL);

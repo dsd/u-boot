@@ -520,7 +520,7 @@ static int write_to_ptn_sdmmc(struct fastboot_ptentry *ptn, unsigned int addr, u
 			sprintf(device, "mmc %d", DEV_NUM);
 			sprintf(buffer, "0x%x", addr);
 			sprintf(start, "0x%x", (ptn->start / CFG_FASTBOOT_SDMMC_BLOCKSIZE));
-			sprintf(length, "0x%x", (ptn->length / CFG_FASTBOOT_SDMMC_BLOCKSIZE));
+			sprintf(length, "0x%x", ((size == 0 ? ptn->length : size) / CFG_FASTBOOT_SDMMC_BLOCKSIZE));
 
 			ret = do_mmcops(NULL, 0, 6, argv);
 		} else {
@@ -669,9 +669,23 @@ static int write_to_ptn_sdmmc(struct fastboot_ptentry *ptn, unsigned int addr, u
 
 			argc++;
 		}
+		else if (!strcmp(ptn->name, "recovery"))
+		{
+			argv[2] = ptn->name;
+			argv[5] = length;
+			sprintf(length, "0x%x",
+				((size + CFG_FASTBOOT_SDMMC_BLOCKSIZE - 1)
+				/ CFG_FASTBOOT_SDMMC_BLOCKSIZE ) * CFG_FASTBOOT_SDMMC_BLOCKSIZE);
+			argc++;
+		}
 		else	/* kernel */
 		{
 			argv[2] = ptn->name;
+			argv[5] = length;
+			sprintf(length, "0x%x",
+				((size + CFG_FASTBOOT_SDMMC_BLOCKSIZE - 1)
+				/ CFG_FASTBOOT_SDMMC_BLOCKSIZE ) * CFG_FASTBOOT_SDMMC_BLOCKSIZE);
+			argc++;
 		}
 		sprintf(buffer, "0x%x", addr);
 
@@ -785,8 +799,7 @@ static int rx_handler (const unsigned char *buffer, unsigned int buffer_size)
 		{
 			if (!strcmp(cmdbuf + 6, "-bootloader"))
 			{
-				gflag_reboot = 1;
-				return 0;
+				INF_REG4_REG = 0xe;
 			}
 			else
 			{
@@ -1564,7 +1577,21 @@ static int set_partition_table_sdmmc()
 	/* Ramdisk */
 	strcpy(ptable[pcount].name, "ramdisk");
 	ptable[pcount].start = 0;
-	ptable[pcount].length = PART_SIZE_ROOTFS;
+	ptable[pcount].length = 0;
+	ptable[pcount].flags = FASTBOOT_PTENTRY_FLAGS_USE_MOVI_CMD;
+	pcount++;
+
+	/* Kernel */
+	strcpy(ptable[pcount].name, "recoverykernel");
+	ptable[pcount].start = 0;
+	ptable[pcount].length = 0;
+	ptable[pcount].flags = FASTBOOT_PTENTRY_FLAGS_USE_MOVI_CMD;
+	pcount++;
+
+	/* Ramdisk */
+	strcpy(ptable[pcount].name, "recovery");
+	ptable[pcount].start = 0;
+	ptable[pcount].length = 0;
 	ptable[pcount].flags = FASTBOOT_PTENTRY_FLAGS_USE_MOVI_CMD;
 	pcount++;
 
@@ -1598,11 +1625,11 @@ static int set_partition_table_sdmmc()
 	ptable[pcount].flags = FASTBOOT_PTENTRY_FLAGS_USE_MMC_CMD;
 	pcount++;
 
-	/* fat */
+	/* Sysinfo */
 	get_mmc_part_info(dev_num, 1, &start, &count, &pid);
-	if (pid != 0xc)
+	if (pid != 0x83)
 		goto part_type_error;
-	strcpy(ptable[pcount].name, "fat");
+	strcpy(ptable[pcount].name, "sysinfo");
 	ptable[pcount].start = start * CFG_FASTBOOT_SDMMC_BLOCKSIZE;
 	ptable[pcount].length = count * CFG_FASTBOOT_SDMMC_BLOCKSIZE;
 	ptable[pcount].flags = FASTBOOT_PTENTRY_FLAGS_USE_MMC_CMD;

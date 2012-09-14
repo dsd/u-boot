@@ -67,6 +67,11 @@ MD5Init(struct MD5Context *ctx)
 	ctx->bits[1] = 0;
 }
 
+#if defined(CONFIG_W30_DVT)
+extern unsigned int second_boot_info;
+extern int bl_current;
+extern void bl_control(int status);
+#endif
 /*
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
@@ -75,6 +80,9 @@ static void
 MD5Update(struct MD5Context *ctx, unsigned char const *buf, unsigned len)
 {
 	register __u32 t;
+#if defined(CONFIG_W30_DVT)
+	int cnt = 0;
+#endif
 
 	/* Update bitcount */
 
@@ -109,6 +117,12 @@ MD5Update(struct MD5Context *ctx, unsigned char const *buf, unsigned len)
 		MD5Transform(ctx->buf, (__u32 *) ctx->in);
 		buf += 64;
 		len -= 64;
+#if defined(CONFIG_W30_DVT)
+		if (second_boot_info == 1 && ++cnt > 4000) {
+			bl_control(!bl_current);
+			cnt = 0;
+		}
+#endif
 	}
 
 	/* Handle any remaining bytes of data. */

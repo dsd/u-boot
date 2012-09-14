@@ -19,6 +19,26 @@ unsigned int OmPin;
 DECLARE_GLOBAL_DATA_PTR;
 extern int nr_dram_banks;
 unsigned int second_boot_info = 0xffffffff;
+#define	CON_KEY_POWER	S5P_GPX0_CON
+#define	DAT_KEY_POWER	S5P_GPX0_DAT
+#define	PUD_KEY_POWER	S5P_GPX0_PUD
+#define	BIT_KEY_POWER	3
+
+#define	CON_KEY_VOLDEC	S5P_GPX2_CON
+#define	DAT_KEY_VOLDEC	S5P_GPX2_DAT
+#define	PUD_KEY_VOLDEC	S5P_GPX2_PUD
+#define	BIT_KEY_VOLDEC	0
+
+#define	CON_KEY_VOLINC	S5P_GPX2_CON
+#define	DAT_KEY_VOLINC	S5P_GPX2_DAT
+#define	PUD_KEY_VOLINC	S5P_GPX2_PUD
+#define	BIT_KEY_VOLINC	1
+
+#define	GPIO_SET_CON(key, val)	CON_KEY_##key = (CON_KEY_##key & ~(0xF << (BIT_KEY_##key * 4))) | (((val) & 0xF) << (BIT_KEY_##key * 4))
+#define	GPIO_SET_PUD(key, val)	PUD_KEY_##key = (PUD_KEY_##key & ~(0x3 << (BIT_KEY_##key * 2))) | (((val) & 0x3) << (BIT_KEY_##key * 2))
+#define	GPIO_SET_DAT(key, val)	DAT_KEY_##key = (DAT_KEY_##key & ~(0x1 << (BIT_KEY_##key * 1))) | (((val) & 0x1) << (BIT_KEY_##key * 1))
+
+#define	GPIO_GET_DAT(key)	((DAT_KEY_##key >> BIT_KEY_##key) & 1)
 
 /* ------------------------------------------------------------------------- */
 #define SMC9115_Tacs	(0x0)	// 0clk		address set-up
@@ -178,7 +198,10 @@ int board_init(void)
 
 int dram_init(void)
 {
-	//gd->ram_size = get_ram_size((long *)PHYS_SDRAM_1, PHYS_SDRAM_1_SIZE);
+	gd->ram_size	= get_ram_size((long *)PHYS_SDRAM_1, PHYS_SDRAM_1_SIZE)
+					+ get_ram_size((long *)PHYS_SDRAM_2, PHYS_SDRAM_2_SIZE)
+					+ get_ram_size((long *)PHYS_SDRAM_3, PHYS_SDRAM_3_SIZE)
+					+ get_ram_size((long *)PHYS_SDRAM_4, PHYS_SDRAM_4_SIZE);
 
 	return 0;
 }
@@ -219,6 +242,114 @@ int checkboard(void)
 }
 #endif
 
+int board_key_check(void)
+{
+	int keystate = 0;
+
+	// POWER KEY
+	GPIO_SET_CON(POWER, 0);
+	GPIO_SET_PUD(POWER, 3);
+	// VOLDEC
+	GPIO_SET_CON(VOLDEC, 0);
+	GPIO_SET_PUD(VOLDEC, 3);
+	// VOLINC
+	GPIO_SET_CON(VOLINC, 0);
+	GPIO_SET_PUD(VOLINC, 3);
+
+	udelay(2000);
+
+	if(GPIO_GET_DAT(POWER) == 0)
+		keystate |= 0x1;
+	if(GPIO_GET_DAT(VOLDEC) == 0)
+		keystate |= 0x2;
+	if(GPIO_GET_DAT(VOLINC) == 0)
+		keystate |= 0x4;
+
+	return keystate;
+}
+
+int get_mmc_part_info(char *device_name, int part_num, int *start, int *count, unsigned char *pid);
+int partition_check(void)
+{
+	char dev_num[5] = "0";
+	unsigned long long start, count;
+	unsigned char pid;
+
+	get_mmc_part_info(dev_num, 1, &start, &count, &pid);
+	if (pid != 0x83 && pid != 0x0C)
+		return 1;
+	get_mmc_part_info(dev_num, 2, &start, &count, &pid);
+	if (pid != 0x83)
+		return 1;
+	get_mmc_part_info(dev_num, 3, &start, &count, &pid);
+	if (pid != 0x83)
+		return 1;
+	get_mmc_part_info(dev_num, 4, &start, &count, &pid);
+	if (pid != 0x83)
+		return 1;
+	return 0;
+}
+
+typedef struct {
+	ulong	sta;
+	ulong	end;
+} mem_t;
+
+extern void bl_control(int status);
+
+int pcbatest_memory(void)
+{
+	int idx = 0;
+	int blcnt;
+
+	mem_t memtables[] = {
+		{ 0x40000000, 0x42FFFFFF },
+	//	{ 0x43000000, 0x43FFFFFF }, // reserved for u-boot
+		{ 0x43000000, 0x43BFFFFF },
+		{ 0x44000000, 0x4FFFFFFF },
+		{ 0x50000000, 0x5FFFFFFF },
+		{ 0x60000000, 0x6FFFFFFF },
+		{ 0x70000000, 0x7FF00000 },
+		{ 0, 0 }
+	};
+
+	blcnt = 0;
+	while (memtables[idx].sta && memtables[idx].end && memtables[idx].sta < memtables[idx].end) {
+		vu_long *sta;
+		sta = memtables[idx].sta;
+		while (sta < memtables[idx].end) {
+			ulong end;
+			ulong *cur, key;
+			unsigned char cnt;
+			end = sta + 4096 < memtables[idx].end ? sta + 4096 : memtables[idx].end;
+			printf("sta=0x%08lX end=0x%08lX\n", sta, end);
+			for (cnt = 0; cnt < 16; cnt += 10) {
+				key = cnt & 0xF;
+				key = (key << 28) | (key << 24) | (key << 20) | (key << 16) | (key << 12) | (key << 8) | (key << 4) | key;
+				for (cur = sta; cur < end; cur+=1024)
+					*cur = key;
+				for (cur = sta; cur < end; cur+=1024) {
+					if (*cur != key || ctrlc()) {
+						printf("Addr: 0x%08lX, w=0x%08lX r=0x%08lX\n", sta, *cur, key);
+						return 1;
+					}
+				}
+			}
+			sta = end;
+			blcnt++;
+			if (blcnt == 100) {
+				bl_control(1);
+			} else
+			if (blcnt == 200) {
+				bl_control(0);
+				blcnt = 0;
+			}
+		}
+		idx++;
+	}
+	bl_control(0);
+	return 0;
+}
 
 
 #define CONFIG_BOOT_AUTOCOMMAND	\
@@ -229,6 +360,8 @@ int checkboard(void)
 
 int board_late_init (void)
 {
+	int keystate = 0;
+
 #ifdef CONFIG_UPDATE_SOLUTION
 	GPIO_Init();
 	GPIO_SetFunctionEach(eGPIO_X0, eGPIO_0, 0);
@@ -267,8 +400,47 @@ int board_late_init (void)
 
 
 #ifdef CONFIG_CPU_EXYNOS4X12
-	if(INF_REG4_REG == 0xf)
-		setenv ("bootcmd", CONFIG_BOOTCOMMAND3);
+	keystate = board_key_check();
+
+	// fuse bootloader
+	if(second_boot_info != 0) {
+		//pcbatest_memory();
+		run_command(CONFIG_BOOTCMD_FUSE_BOOTLOADER, NULL);
+	}
+
+	if((INF_REG4_REG == 0xd)) {
+		// reboot default
+		char buf[10];
+		sprintf(buf, "%d", CONFIG_BOOTDELAY);
+		setenv ("bootdelay", buf);
+		setenv ("reserved", NULL);
+		saveenv();
+	} else
+	if((INF_REG4_REG == 0xe) || keystate == (0x1 | 0x2)) {
+		// reboot bootloader
+		printf("BOOTLOADER - FASTBOOT\n");
+		setenv ("reserved", "fastboot");
+		setenv ("bootdelay", "0");
+	} else
+	if((INF_REG4_REG == 0xf) || keystate == (0x1 | 0x4)) {
+		// reboot recovery
+		printf("BOOTLOADER - RECOVERY\n");
+		setenv ("reserved", CONFIG_BOOTCMD_RECOVERY);
+		setenv ("bootdelay", "0");
+	} else
+	if(keystate == (0x1 | 0x2 | 0x4) || second_boot_info != 0 || partition_check()) {
+		// 2nd boot
+		printf("BOOTLOADER - 2ND BOOT DEVICE\n");
+		setenv ("bootcmd", CONFIG_BOOTCOMMAND);
+		setenv ("reserved", CONFIG_BOOTCMD_FUSE_RELEASE);
+		setenv ("bootdelay", "0");
+	} else {
+		// normal case
+		char buf[10];
+		sprintf(buf, "%d", CONFIG_BOOTDELAY);
+		setenv ("bootdelay", buf);
+	}
+	INF_REG4_REG = 0;
 #endif
 
 	return 0;

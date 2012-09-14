@@ -57,6 +57,12 @@ DECLARE_GLOBAL_DATA_PTR;
 #define mdelay(x)	udelay(1000*x)
 #endif
 
+#if defined(CONFIG_W30_DVT)
+extern unsigned int second_boot_info;
+extern int bl_current;
+extern void bl_control(int status);
+#endif
+
 struct mmc mmc_channel[MMC_MAX_CHANNEL];
 
 struct sdhci_host mmc_host[MMC_MAX_CHANNEL];
@@ -233,9 +239,13 @@ s3c_hsmmc_send_command(struct mmc *mmc, struct mmc_cmd *cmd,
 			return -1;
 		} else if (mask & SDHCI_INT_DMA_END) {
 			printf("SDHCI_INT_DMA_END\n");
-		} else {		
+		} else {
 			dbg("r/w is done\n");
 		}
+#if defined(CONFIG_W30_DVT)
+		if (second_boot_info == 1)
+			bl_control(!bl_current);
+#endif
 	}
 
 	mdelay(1);

@@ -82,7 +82,7 @@ int do_movi(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 	case 'b':
 		if (argc != (6 - location))
 			goto usage;
-		attribute = 0x3;
+		attribute = 0x1;
 		break;
 	case 'u':
 		if (argc != (6 - location))
@@ -90,14 +90,21 @@ int do_movi(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 		attribute = 0x2;
 		break;
 	case 'k':
-		if (argc != 5)
-			goto usage;
+	    if ((rw != 0 || argc != 5) && (argc != 6))
+		    goto usage;
 		attribute = 0x4;
 		break;
 	case 'r':
-		if (argc != 6)
-			goto usage;
-		attribute = 0x8;
+	    if ((rw != 0 || argc != 5) && (argc != 6))
+		    goto usage;
+        if(strcmp(cmd, "rootfs") == 0 || strcmp(cmd, "ramdisk") == 0)
+    		attribute = 0x8;
+        else
+        if(strcmp(cmd, "recoverykernel") == 0)
+    		attribute = 0x5;
+        else
+        if(strcmp(cmd, "recovery") == 0)
+    		attribute = 0x6;
 		break;
 	case 't':
 		if (argc != (6 - location))
@@ -133,7 +140,7 @@ int do_movi(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 		return 1;
 	}
 	/* Signed BL2 r/w */
-	if (attribute == 0x3) {
+	if (attribute == 0x1) {
 		for (i=0, image = raw_area_control.image; i<15; i++) {
 			if (image[i].attribute == attribute)
 				break;
@@ -158,7 +165,7 @@ int do_movi(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 		if (rw) {
 			start_blk = raw_area_control.image[1].start_blk;
 			blkcnt = raw_area_control.image[1].used_blk;
-			printf("Writing BL1 to device %d Start %ld (Count %ld sectors)..\n",
+			printf("Writing BL3 to device %d Start %ld (Count %ld sectors)..\n",
 				dev_num, start_blk, blkcnt);
 			movi_write_bl1(addr, dev_num);
 		}
@@ -183,40 +190,71 @@ int do_movi(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 	}
 	
 	/* kernel r/w */
-	if (attribute == 0x4) {
+	if (attribute == 0x4 || attribute == 0x5) {
 		for (i=0, image = raw_area_control.image; i<15; i++) {
 			if (image[i].attribute == attribute)
 				break;
 		}
 		start_blk = image[i].start_blk;
-		blkcnt = image[i].used_blk;
-		printf("%s kernel..device %d Start %ld, Count %ld ", rw ? "writing" : "reading",
-			dev_num, start_blk, blkcnt);
-		sprintf(run_cmd, "mmc %s %d 0x%lx 0x%lx 0x%lx",
-			rw ? "write" : "read", dev_num,
-			addr, start_blk, blkcnt);
+        blkcnt = image[i].used_blk;
+        if (rw) {
+            if (argc == 6) {
+        		rfs_size = simple_strtoul(argv[5], NULL, 16);
+	            blkcnt = rfs_size/MOVI_BLKSIZE + ((rfs_size&(MOVI_BLKSIZE-1)) ? 1 : 0);
+            }
+            sprintf(run_cmd, "setenv reserved; setenv %s.blkcnt 0x%X; setenv bootdelay %d; saveenv", argv[2], blkcnt, CONFIG_BOOTDELAY);
+            run_command(run_cmd, NULL);
+		    printf("writing kernel..device %d Start %ld, Count %ld ", dev_num, start_blk, blkcnt);
+		    sprintf(run_cmd, "mmc write %d 0x%lx 0x%lx 0x%lx", dev_num, addr, start_blk, blkcnt);
+        } else {
+            if (argc == 6) {
+        		rfs_size = simple_strtoul(argv[5], NULL, 16);
+	            blkcnt = rfs_size/MOVI_BLKSIZE + ((rfs_size&(MOVI_BLKSIZE-1)) ? 1 : 0);
+            } else {
+                sprintf(run_cmd, "%s.blkcnt", argv[2]);
+                cmd = getenv(run_cmd);
+                if (cmd)
+                    blkcnt = simple_strtoul(cmd, NULL, 16);
+            }
+		    printf("reading kernel..device %d Start %ld, Count %ld ", dev_num, start_blk, blkcnt);
+		    sprintf(run_cmd, "mmc read %d 0x%lx 0x%lx 0x%lx", dev_num, addr, start_blk, blkcnt);
+        }
+        
 		run_command(run_cmd, dev_num);
 		printf("completed\n");
 		return 1;
 	}
 
 	/* root file system r/w */
-	if (attribute == 0x8) {
-		rfs_size = simple_strtoul(argv[5], NULL, 16);
-
+	if (attribute == 0x8 || attribute == 0x6) {
 		for (i=0, image = raw_area_control.image; i<15; i++) {
 			if (image[i].attribute == attribute)
 				break;
 		}
 		start_blk = image[i].start_blk;
-		blkcnt = rfs_size/MOVI_BLKSIZE +
-			((rfs_size&(MOVI_BLKSIZE-1)) ? 1 : 0);
-		image[i].used_blk = blkcnt;
-		printf("%s RFS..device %d Count %ld, Start %ld ", rw ? "writing":"reading",
-			dev_num, start_blk, blkcnt);
-		sprintf(run_cmd,"mmc %s %d 0x%lx 0x%lx 0x%lx",
-			rw ? "write":"read", dev_num,
-			addr, start_blk, blkcnt);
+		blkcnt = image[i].used_blk;
+        if (rw) {
+            if (argc == 6) {
+        		rfs_size = simple_strtoul(argv[5], NULL, 16);
+	            blkcnt = rfs_size/MOVI_BLKSIZE + ((rfs_size&(MOVI_BLKSIZE-1)) ? 1 : 0);
+            }
+            sprintf(run_cmd, "setenv reserved; setenv %s.blkcnt 0x%X; setenv bootdelay %d; saveenv", argv[2], blkcnt, CONFIG_BOOTDELAY);
+            run_command(run_cmd, NULL);
+		    printf("writing RFS..device %d Start %ld, Count %ld ", dev_num, start_blk, blkcnt);
+		    sprintf(run_cmd, "mmc write %d 0x%lx 0x%lx 0x%lx", dev_num, addr, start_blk, blkcnt);
+        } else {
+            if (argc == 6) {
+        		rfs_size = simple_strtoul(argv[5], NULL, 16);
+	            blkcnt = rfs_size/MOVI_BLKSIZE + ((rfs_size&(MOVI_BLKSIZE-1)) ? 1 : 0);
+            } else {
+                sprintf(run_cmd, "%s.blkcnt", argv[2]);
+                cmd = getenv(run_cmd);
+                if (cmd)
+                    blkcnt = simple_strtoul(cmd, NULL, 16);
+            }
+		    printf("reading RFS..device %d Start %ld, Count %ld ", dev_num, start_blk, blkcnt);
+		    sprintf(run_cmd, "mmc read %d 0x%lx 0x%lx 0x%lx", dev_num, addr, start_blk, blkcnt);
+        }
 		run_command(run_cmd, dev_num);
 		printf("completed\n");
 		return 1;

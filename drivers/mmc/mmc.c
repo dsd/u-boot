@@ -52,6 +52,12 @@ static void feedback_delay(struct mmc *mmc, int count);
 #define dbg(x...)       do { } while (0)
 #endif
 
+#if defined(CONFIG_W30_DVT)
+extern unsigned int second_boot_info;
+extern int bl_current;
+extern void bl_control(int status);
+#endif
+
 static struct list_head mmc_devices;
 static int cur_dev_num = -1;
 
@@ -1472,6 +1478,10 @@ int mmc_erase(struct mmc *mmc, int part, u32 start, u32 block)
 		}
 		if (!(count%(4000*dis))) {
 			printf("\n");
+#if defined(CONFIG_W30_DVT)
+			if (second_boot_info == 1)
+				bl_control(!bl_current);
+#endif
 		}
 	}
 

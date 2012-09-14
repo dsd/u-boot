@@ -1,0 +1,1003 @@
+;------------------------------------------------------------------------------
+;-
+;- Filename	: Ex4x12_evt1_lpddr2.cmm
+;-
+;- Description	: Trace32 script
+;- Created at	: 2012/04/12
+;-
+;- Copyright(C) : Samsung Electronics, 2011, All rights reserved.
+;-
+;-----------------------------------------------------------------------------
+
+;------------------------------------------------------------------------------
+;- global variables initialization
+;------------------------------------------------------------------------------
+
+;;;;;;;;;; variables ;;;;;;;;;;
+
+; ARM
+LOCAL &CORE2_RATIO &APLL_RATIO &PCLK_DBG_RATIO &ATB_RATIO &PERIPH_RATIO &COREM1_RATIO
+LOCAL &COREM0_RATIO &CORE_RATIO &CORES_RATIO &HPM_RATIO &COPY_RATIO
+
+; MIF
+LOCAL &DMCP_RATIO &DMCD_RATIO &DMC_RATIO &DPHY_RATIO &ACP_PCLK_RATIO &ACP_RATIO
+LOCAL &DPM_RATIO &DVSEM_RATIO &C2C_ACLK_RATIO &PWI_RATIO &C2C_RATIO &G2D_ACP_RATIO
+
+; G3D
+LOCAL &G3D_RATIO
+
+; INT
+LOCAL &ACLK_400_MCUISP_RATIO &ACLK_266_GPS_RATIO &ONENAND_RATIO &ACLK_133_RATIO &ACLK_160_RATIO &ACLK_100_RATIO &ACLK_200_RATIO
+LOCAL &GPL_RATIO &GDL_RATIO &GPR_RATIO &GDR_RATIO &ISPDIV1_RATIO &ISPDIV0_RATIO &MCUISPDIV1_RATIO &MCUISPDIV0_RATIO &MPWMDIV_RATIO
+LOCAL &MFC_RATIO &JPEG_RATIO &CSIS1_RATIO &CSIS0_RATIO &CAM1_RATIO &CAM0_RATIO &FIMC3_LCLK_RATIO &FIMC2_LCLK_RATIO &FIMC1_LCLK_RATIO &FIMC0_LCLK_RATIO
+LOCAL &MMC1_PRE_RATIO &MMC1_RATIO &MMC0_PRE_RATIO &MMC0_RATIO &MMC3_PRE_RATIO &MMC3_RATIO &MMC2_PRE_RATIO &MMC2_RATIO &MMC4_PRE_RATIO &MMC4_RATIO
+
+;;;;;;;;;; registers ;;;;;;;;;;
+LOCAL &CLK_DIV_CPU0 &CLK_DIV_CPU1 &APLL_CON1 &APLL_CON0
+LOCAL &CLK_DIV_DMC0 &CLK_DIV_DMC1 &MPLL_CON1 &MPLL_CON0
+LOCAL &EPLL_CON2 &EPLL_CON1 &EPLL_CON0
+LOCAL &CLK_DIV_G3D &VPLL_CON2 &VPLL_CON1 &VPLL_CON0
+LOCAL &CLK_DIV_TOP &CLK_DIV_LEFTBUS &CLK_DIV_RIGHTBUS &CLK_DIV_ISP0 &CLK_DIV_ISP1 &CLK_DIV_MFC &CLK_DIV_CAM1 &CLK_DIV_CAM &CLK_DIV_FSYS1 &CLK_DIV_FSYS2 &CLK_DIV_FSYS3
+
+LOCAL &DMC_BASE &DMC0_BASE &DMC1_BASE &DRAM_ADDR_BASE
+
+;;;;;;;;; dvfs table constant ;;;;;;;;
+&ARM_L0='a'	; ARMCLK 1500MHz
+&ARM_L1='b'	; ARMCLK 1400MHz
+&ARM_L2='c'	; ARMCLK 1300MHz
+&ARM_L3='d'	; ARMCLK 1200MHz
+&ARM_L4='e'	; ARMCLK 1100MHz
+&ARM_L5='f'	; ARMCLK 1000MHz
+&ARM_L6='g'	; ARMCLK 900MHz
+&ARM_L7='h'	; ARMCLK 800MHz
+&ARM_L8='i'	; ARMCLK 700MHz
+&ARM_L9='j'	; ARMCLK 600MHz
+&ARM_L10='k'	; ARMCLK 500MHz
+&ARM_L11='l'	; ARMCLK 400MHz
+&ARM_L12='m'	; ARMCLK 300MHz
+&ARM_L13='n'	; ARMCLK 200MHz
+
+&MIF_L0='0'	; SCLKDMC 400MHz
+&MIF_L1='1'	; SCLKDMC 266MHz
+&MIF_L2='2'	; SCLKDMC 160MHz
+&MIF_L3='3'	; SCLKDMC 100MHz
+
+&INT_L0='o'	; BUS 200MHz
+&INT_L1='p'	; BUS 160MHz
+&INT_L2='q'	; BUS 100MHz
+
+&G3D_L0='w'	; SCLKG3D 440MHz
+&G3D_L1='x'	; SCLKG3D 350MHz
+&G3D_L2='y'	; SCLKG3D 266MHz
+&G3D_L3='z'	; SCLKG3D 160MHz
+
+;----------------------------------------------------------------------;
+; Configuring Option
+;----------------------------------------------------------------------;
+;;;;;;;;;----- USER SETTING VARIABLES -----;;;;;;;;;;;
+
+&DEV="EVT1"			;- "FPGA", "EVT0", or "EVT1", ...
+&CORE_NUM=0x1			;- Single: 0x1, Dual: 0x2, Quad: 0x4, ...
+
+;- CMU setting
+&USE_PLL=1.			;- FIN: 0, PLL: 1
+
+;; You can select DVFS level and dram setting
+&DVFS_ARM_LEVEL=&ARM_L7		;- &ARM_L0 ~ &ARM_L13
+&DVFS_MIF_LEVEL=&MIF_L0		;- &MIF_L0 ~ &MIF_L3
+&DVFS_INT_LEVEL=&INT_L0		;- &INT_L0 ~ &INT_L2
+&DVFS_G3D_LEVEL=&G3D_L1		;- &G3D_L0 ~ &G3D_L3
+
+;- DREX2 v1.1
+&USE_DLL=0x1			;- USE: 0x1, NOT USE: 0x0
+&MCLK=400			;- 12 or 400
+&IV_SIZE=0x7			;- 16-byte:0x4, 32-byte:0x5, 64-byte:0x6, 128-byte:0x7, 256-byte:0x8, 512-byte:0x9, ... until 2G-byte:0x1F
+LOCAL &READ &TEMP
+
+&DMC_DLL_ON=1
+;&DMC_DLL_ON=0
+&DMC_LOW_DLL=0
+;&DMC_USE_FORCE=1
+&DMC_USE_FORCE=0
+
+&AP_ODT_OFF='a'
+&AP_ODT_ON='b'
+&AP_ODT=&AP_ODT_OFF
+
+;- SemiHosting
+&SEMIHOSTING=0				;- SEMIHOSTING enable/disable
+
+;- Another debug method
+&USE_PTM=0			;- enable: 1, disable: 0
+&USE_SWO=0			;- enable: 1, disable: 0
+
+;- TZASC Enable
+&TZASC_EN=0			;- enable: 1, disable: 0
+
+;- Secure JTAG Enable
+&SJTAG_EN=0			;- enable: 1, disable: 0
+
+;------------------------------------------------------------------------------
+; CORE & JTAG initialization
+;------------------------------------------------------------------------------
+print "Reset System"
+
+Symbol.Reset
+SYStem.RESet
+MMU.RESet
+
+if &CORE_NUM==1
+(
+	print "Single CORE"
+	System.CPU CORTEXA9MPCORE
+	Sys.Config.COREBASE 0x80110000
+)
+else if &CORE_NUM==2
+(
+	print "Dual CORE"
+	System.CPU CORTEXA9MPCORESMP2
+	Sys.Config.COREBASE 0x80110000 0x80112000
+)
+else if &CORE_NUM==4
+(
+	print "Quad CORE"
+	System.CPU CORTEXA9MPCORESMP4
+	Sys.Config.COREBASE 0x80110000 0x80112000 0x80114000 0x80116000
+)
+else
+(
+	print "CORE initialization is failed."
+	ENDDO
+)
+;ETM.OFF
+System.JtagClock 12Mhz
+
+System.Option ResBreak OFF
+System.Option EnReset OFF
+Sys.Mode PREPARE
+Wait 0.1s
+
+if &SJTAG_EN==1		;; Secure JTAG Password
+(
+	;; Please write correct password before enable SJTAG_EN
+	d.s APB:0x10888010 %LE %LONG 0x00000000
+	d.s APB:0x10888010 %LE %LONG 0x00000000
+	d.s APB:0x10888010 %LE %LONG 0x00000000
+	d.s APB:0x10888010 %LE %LONG 0x00000000
+	d.s APB:0x10888010 %LE %LONG 0x00000000
+)
+
+;;; SYS.UP
+if &USE_PTM==1		;; PTM sys.up
+(
+	Sys.Config.COREBASE 0x80010000 0x80012000
+	Sys.Config.ETMBASE 0x8001c000 0x8001d000
+	Sys.Config.CTIBASE 0x80018000 0x80019000
+	Sys.Config.FUNNELBASE 0x80004000
+	Sys.Config.ETMFUNNELPORT 0. 1.
+	Sys.Config.TPIUBASE 0x80003000
+	Sys.Config.ETBBASE 0x80001000
+	sys.config.ITMBASE 0x80005000
+	sys.config.ITMFUNNELPORT 3.
+	ETM.OFF
+
+	System.Up
+	Wait 0.2s
+
+	; PTM GPIO setting E4212 @PTM func & drive strength 3x only operation
+	d.s SD:0x11000260 %LE %LONG 0x55555555	;GPM0CON
+	d.s SD:0x11000268 %LE %LONG 0x0		;GPM0PUD
+	d.s SD:0x1100026C %LE %LONG 0x5555	;GPM0DRV PTM only drive ok at this d.s.
+	d.s SD:0x11000280 %LE %LONG 0x05555555	;GPM1CON
+	d.s SD:0x11000288 %LE %LONG 0x0		;GPM1PUD
+	d.s SD:0x1100028C %LE %LONG 0x5555	;GPM1DRV
+	d.s SD:0x110002A0 %LE %LONG 0x555	;GPM2CON
+	d.s SD:0x110002A8 %LE %LONG 0x0		;GPM2PUD
+	d.s SD:0x110002AC %LE %LONG 0x5555	;GPM2DRV
+)
+else			;; normal sys.up
+(
+	System.Up
+	Wait 0.2s
+)
+
+;- change to supervisor mode
+if &CORE_NUM==1
+(
+	r.s cpsr (r(cpsr)&0xffffff00)|0xd3
+)
+else if &CORE_NUM==2
+(
+	Core.Select 1
+;	Register.Set PC 0x40008000
+	r.s cpsr (r(cpsr)&0xFFFFFF00)|0xD3
+
+	Core.Select 0
+;	Register.Set PC 0x40008000
+	r.s cpsr (r(cpsr)&0xFFFFFF00)|0xD3
+	Wait 0.1s
+)
+else if &CORE_NUM==4
+(
+	Core.Select 3
+;	Register.Set PC 0x40008000
+	r.s cpsr (r(cpsr)&0xFFFFFF00)|0xD3
+
+	Core.Select 2
+;	Register.Set PC 0x40008000
+	r.s cpsr (r(cpsr)&0xFFFFFF00)|0xD3
+
+	Core.Select 1
+;	Register.Set PC 0x40008000
+	r.s cpsr (r(cpsr)&0xFFFFFF00)|0xD3
+
+	Core.Select 0
+;	Register.Set PC 0x40008000
+	r.s cpsr (r(cpsr)&0xFFFFFF00)|0xD3
+	Wait 0.1s
+)
+
+;------------------------------------------------------------------------------
+;- WDT Disable
+;------------------------------------------------------------------------------
+d.s SD:0x10060000 %LE %LONG 0x0
+
+
+;------------------------------------------------------------------------------;
+; Clock Controller
+;------------------------------------------------------------------------------;
+;;;**** CPU common part
+&CORE2_RATIO=0.
+&PCLK_DBG_RATIO=1.
+&PERIPH_RATIO=0.
+&CORE_RATIO=0.
+&HPM_RATIO=0.
+
+&APLL_CON1=0x00203800
+
+;;;**** ARM DVFS LEVEL
+IF &DVFS_ARM_LEVEL==&ARM_L0
+(
+	&APLL_RATIO=2.
+	&ATB_RATIO=6.
+	&COREM1_RATIO=7.
+	&COREM0_RATIO=3.
+	&CORES_RATIO=7.	; only for Quad
+	&COPY_RATIO=6.
+	&APLL_CON0=0x80FA0400	; APLL 1500MHz (P:4, M:250, S:0)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L1
+(
+	&APLL_RATIO=2.
+	&ATB_RATIO=6.
+	&COREM1_RATIO=7.
+	&COREM0_RATIO=3.
+	&CORES_RATIO=6.	; only for Quad
+	&COPY_RATIO=6.
+	&APLL_CON0=0x80AF0300	; APLL 1400MHz (P:3, M:175, S:0)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L2
+(
+	&APLL_RATIO=2.
+	&ATB_RATIO=5.
+	&COREM1_RATIO=7.
+	&COREM0_RATIO=3.
+	&CORES_RATIO=6.	; only for Quad
+	&COPY_RATIO=5.
+	&APLL_CON0=0x81450600	; APLL 1300MHz (P:6, M:325, S:0)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L3
+(
+	&APLL_RATIO=2.
+	&ATB_RATIO=5.
+	&COREM1_RATIO=7.
+	&COREM0_RATIO=3.
+	&CORES_RATIO=5.	; only for Quad
+	&COPY_RATIO=5.
+	&APLL_CON0=0x80C80400	; APLL 1200MHz (P:6, M:200, S:0)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L4
+(
+	&APLL_RATIO=2.
+	&ATB_RATIO=4.
+	&COREM1_RATIO=6.
+	&COREM0_RATIO=3.
+	&CORES_RATIO=5.	; only for Quad
+	&COPY_RATIO=4.
+	&APLL_CON0=0x81130600	; APLL 1100MHz (P:6, M:275, S:0)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L5
+(
+	&APLL_RATIO=1.
+	&ATB_RATIO=4.
+	&COREM1_RATIO=5.
+	&COREM0_RATIO=2.
+	&CORES_RATIO=4.	; only for Quad
+	&COPY_RATIO=4.
+	&APLL_CON0=0x807D0300	; APLL 1000MHz (P:3, M:125, S:0)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L6
+(
+	&APLL_RATIO=1.
+	&ATB_RATIO=3.
+	&COREM1_RATIO=5.
+	&COREM0_RATIO=2.
+	&CORES_RATIO=4.	; only for Quad
+	&COPY_RATIO=3.
+	&APLL_CON0=0x80960400	; APLL 900MHz (P:4, M:150, S:0)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L7
+(
+	&APLL_RATIO=1.
+	&ATB_RATIO=3.
+	&COREM1_RATIO=5.
+	&COREM0_RATIO=2.
+	&CORES_RATIO=3.	; only for Quad
+	&COPY_RATIO=3.
+	&APLL_CON0=0x80640300	; APLL 800MHz (P:3, M:100, S:0)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L8
+(
+	&APLL_RATIO=1.
+	&ATB_RATIO=3.
+	&COREM1_RATIO=4.
+	&COREM0_RATIO=2.
+	&CORES_RATIO=3.	; only for Quad
+	&COPY_RATIO=3.
+	&APLL_CON0=0x80AF0301	; APLL 700MHz (P:3, M:175, S:1)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L9
+(
+	&APLL_RATIO=1.
+	&ATB_RATIO=3.
+	&COREM1_RATIO=4.
+	&COREM0_RATIO=2.
+	&CORES_RATIO=2.	; only for Quad
+	&COPY_RATIO=3.
+	&APLL_CON0=0x80C80401	; APLL 600MHz (P:4, M:200, S:1)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L10
+(
+	&APLL_RATIO=1.
+	&ATB_RATIO=3.
+	&COREM1_RATIO=4.
+	&COREM0_RATIO=2.
+	&CORES_RATIO=2.	; only for Quad
+	&COPY_RATIO=3.
+	&APLL_CON0=0x807D0301	; APLL 500MHz (P:3, M:125, S:1)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L11
+(
+	&APLL_RATIO=1.
+	&ATB_RATIO=3.
+	&COREM1_RATIO=4.
+	&COREM0_RATIO=2.
+	&CORES_RATIO=1.	; only for Quad
+	&COPY_RATIO=3.
+	&APLL_CON0=0x80640301	; APLL 400MHz (P:3, M:100, S:1)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L12
+(
+	&APLL_RATIO=1.
+	&ATB_RATIO=2.
+	&COREM1_RATIO=4.
+	&COREM0_RATIO=2.
+	&CORES_RATIO=1.	; only for Quad
+	&COPY_RATIO=3.
+	&APLL_CON0=0x80C80402	; APLL 300MHz (P:4, M:200, S:2)
+)
+ELSE IF &DVFS_ARM_LEVEL==&ARM_L13
+(
+	&APLL_RATIO=1.
+	&ATB_RATIO=1.
+	&COREM1_RATIO=3.
+	&COREM0_RATIO=1.
+	&CORES_RATIO=0.	; only for Quad
+	&COPY_RATIO=3.
+	&APLL_CON0=0x80640302	; APLL 200MHz (P:3, M:100, S:2)
+)
+ELSE
+(
+	print "check variable &DVFS_ARM_LEVEL"
+	sys.d
+)
+
+
+;;;**** MIF common part
+&DMCP_RATIO=1.
+&DMCD_RATIO=1.
+&DPHY_RATIO=1.
+&ACP_PCLK_RATIO=1.
+&DPM_RATIO=1.
+&DVSEM_RATIO=1.
+&C2C_ACLK_RATIO=1.
+&PWI_RATIO=15.
+
+&MPLL_CON1=0x00203800
+&MPLL_CON0=0x80640300	; MPLL 800MHz (P:3, M:100, S:0)
+
+;;;**** MIF DVFS
+IF &DVFS_MIF_LEVEL==&MIF_L0	; SCLKDMC 400MHz
+(
+	&DMC_RATIO=1.
+	&ACP_RATIO=3.
+	&C2C_RATIO=1.
+	&G2D_ACP_RATIO=3.
+)
+ELSE IF &DVFS_MIF_LEVEL==&MIF_L1; SCLKDMC 266MHz
+(
+	&DMC_RATIO=2.
+	&ACP_RATIO=4.
+	&C2C_RATIO=2.
+	&G2D_ACP_RATIO=4.
+)
+ELSE IF &DVFS_MIF_LEVEL==&MIF_L2; SCLKDMC 160MHz
+(
+	&DMC_RATIO=4.
+	&ACP_RATIO=5.
+	&C2C_RATIO=4.
+	&G2D_ACP_RATIO=5.
+)
+ELSE IF &DVFS_MIF_LEVEL==&MIF_L3; SCLKDMC 100MHz
+(
+	&DMC_RATIO=7.
+	&ACP_RATIO=7.
+	&C2C_RATIO=7.
+	&G2D_ACP_RATIO=7.
+)
+ELSE
+(
+	print "check variable &DVFS_MIF_LEVEL"
+	sys.d
+)
+
+;;;**** G3D common part
+&CLK_DIV_G3D=0x00000000
+&VPLL_CON2=0x00000080
+&VPLL_CON1=0x66010000
+
+;;;**** G3D DVFS
+IF &DVFS_G3D_LEVEL==&G3D_L0		; SCLK_G3D 440MHz
+(
+	&VPLL_CON0=0x806E0301		; VPLL 440MHz (P:3, M:110, S:1)
+)
+ELSE IF &DVFS_G3D_LEVEL==&G3D_L1	; SCLK_G3D 350MHz
+(
+	&VPLL_CON0=0x80AF0302		; VPLL 350MHz (P:3, M:175, S:2)
+)
+ELSE IF &DVFS_G3D_LEVEL==&G3D_L2	; SCLK_G3D 266MHz
+(
+	&VPLL_CON0=0x80850302		; VPLL 266MHz (P:3, M:133, S:2)
+)
+ELSE IF &DVFS_G3D_LEVEL==&G3D_L3	; SCLK_G3D 160MHz
+(
+	&VPLL_CON0=0x80A00303		; VPLL 160MHz (P:3, M:160, S:3)
+)
+ELSE
+(
+	print "check variable &DVFS_G3D_LEVEL"
+	sys.d
+)
+
+;;;**** EPLL
+&EPLL_CON2=0x00000080
+&EPLL_CON1=0x66010000
+&EPLL_CON0=0x80400203
+
+;;;**** INT common part
+&ONENAND_RATIO=1.
+&ACLK_100_RATIO=7.
+&GPL_RATIO=1.
+&GPR_RATIO=1.
+&ISPDIV1_RATIO=1.
+&ISPDIV0_RATIO=1.
+&MCUISPDIV1_RATIO=1.
+&MCUISPDIV0_RATIO=1.
+&MPWMDIV_RATIO=0.
+&CSIS1_RATIO=0.
+&CSIS0_RATIO=0.
+&CAM1_RATIO=0.
+&CAM0_RATIO=0.
+&MMC1_PRE_RATIO=8.
+&MMC1_RATIO=1.
+&MMC0_PRE_RATIO=8.
+&MMC0_RATIO=1.
+&MMC3_PRE_RATIO=8.
+&MMC3_RATIO=1.
+&MMC2_PRE_RATIO=8.
+&MMC2_RATIO=1.
+&MMC4_PRE_RATIO=8.
+&MMC4_RATIO=1.
+
+;;;**** INT DVFS part
+IF &DVFS_INT_LEVEL==&INT_L0		; BUS 200MHz
+(
+	&ACLK_400_MCUISP_RATIO=1.
+	&ACLK_266_GPS_RATIO=2.
+	&ACLK_133_RATIO=5.
+	&ACLK_160_RATIO=4.
+	&ACLK_200_RATIO=4.
+	&GDL_RATIO=3.
+	&GDR_RATIO=3.
+	&MFC_RATIO=3.
+	&JPEG_RATIO=3.
+	&FIMC3_LCLK_RATIO=4.
+	&FIMC2_LCLK_RATIO=4.
+	&FIMC1_LCLK_RATIO=4.
+	&FIMC0_LCLK_RATIO=4.
+)
+ELSE IF &DVFS_INT_LEVEL==&INT_L1	; BUS 160MHz
+(
+	&ACLK_400_MCUISP_RATIO=2.
+	&ACLK_266_GPS_RATIO=4.
+	&ACLK_133_RATIO=7.
+	&ACLK_160_RATIO=5.
+	&ACLK_200_RATIO=5.
+	&GDL_RATIO=4.
+	&GDR_RATIO=4.
+	&MFC_RATIO=4.
+	&JPEG_RATIO=4.
+	&FIMC3_LCLK_RATIO=5.
+	&FIMC2_LCLK_RATIO=5.
+	&FIMC1_LCLK_RATIO=5.
+	&FIMC0_LCLK_RATIO=5.
+)
+ELSE IF &DVFS_INT_LEVEL==&INT_L2	; BUS 100MHz
+(
+	&ACLK_400_MCUISP_RATIO=7.
+	&ACLK_266_GPS_RATIO=7.
+	&ACLK_133_RATIO=7.
+	&ACLK_160_RATIO=7.
+	&ACLK_200_RATIO=7.
+	&GDL_RATIO=7.
+	&GDR_RATIO=7.
+	&MFC_RATIO=7.
+	&JPEG_RATIO=7.
+	&FIMC3_LCLK_RATIO=7.
+	&FIMC2_LCLK_RATIO=7.
+	&FIMC1_LCLK_RATIO=7.
+	&FIMC0_LCLK_RATIO=7.
+)
+ELSE
+(
+	print "check variable &DVFS_INT_LEVEL"
+	sys.d
+)
+
+;;;*** CPU BLOCK
+&CLK_DIV_CPU0=(&CORE2_RATIO<<28.)|(&APLL_RATIO<<24.)|(&PCLK_DBG_RATIO<<20.)|(&ATB_RATIO<<16.)|(&PERIPH_RATIO<<12.)|(&COREM1_RATIO<<8.)|(&COREM0_RATIO<<4.)|(&CORE_RATIO)
+&CLK_DIV_CPU1=(&CORES_RATIO<<8.)|(&HPM_RATIO<<4.)|&COPY_RATIO
+
+;;;*** MIF BLOCK
+&CLK_DIV_DMC0=(&DMCP_RATIO<<20.)|(&DMCD_RATIO<<16.)|(&DMC_RATIO<<12.)|(&DPHY_RATIO<<8.)|(&ACP_PCLK_RATIO<<4.)|(&ACP_RATIO)
+&CLK_DIV_DMC1=(&DPM_RATIO<<24.)|(&DVSEM_RATIO<<16.)|(&C2C_ACLK_RATIO<<12.)|(&PWI_RATIO<<8.)|(&C2C_RATIO<<4.)|(&G2D_ACP_RATIO)
+
+;;;*** INT BLOCK
+&CLK_DIV_TOP=(&ACLK_400_MCUISP_RATIO<<24.)|(&ACLK_266_GPS_RATIO<<20.)|(&ONENAND_RATIO<<16.)|(&ACLK_133_RATIO<<12.)|(&ACLK_160_RATIO<<8.)|(&ACLK_100_RATIO<<4.)|(&ACLK_200_RATIO)
+&CLK_DIV_LEFTBUS=(&GPL_RATIO<<4.)|(&GDL_RATIO)
+&CLK_DIV_RIGHTBUS=(&GPR_RATIO<<4.)|(&GDR_RATIO)
+&CLK_DIV_ISP0=(&ISPDIV1_RATIO<<4.)|(&ISPDIV0_RATIO)
+&CLK_DIV_ISP1=(&MCUISPDIV1_RATIO<<8.)|(&MCUISPDIV0_RATIO<<4.)|(&MPWMDIV_RATIO)
+&CLK_DIV_MFC=&MFC_RATIO
+&CLK_DIV_CAM1=&JPEG_RATIO
+&CLK_DIV_CAM=(&CSIS1_RATIO<<28.)|(&CSIS0_RATIO<<24.)|(&CAM1_RATIO<<20.)|(&CAM0_RATIO<<16.)|(&FIMC3_LCLK_RATIO<<12.)|(&FIMC2_LCLK_RATIO<<8.)|(&FIMC1_LCLK_RATIO<<4.)|(&FIMC0_LCLK_RATIO)
+&CLK_DIV_FSYS1=(&MMC1_PRE_RATIO<<24.)|(&MMC1_RATIO<<16.)|(&MMC0_PRE_RATIO<<8.)|(&MMC0_RATIO)
+&CLK_DIV_FSYS2=(&MMC3_PRE_RATIO<<24.)|(&MMC3_RATIO<<16.)|(&MMC2_PRE_RATIO<<8.)|(&MMC2_RATIO)
+&CLK_DIV_FSYS3=(&MMC4_PRE_RATIO<<8.)|(&MMC4_RATIO)
+
+IF &USE_PLL==1
+(
+	; Set CMU_CPU MUX Path  to FINPLL not affected by PLL modification
+	d.s SD:0x10044200 %LE %LONG 0x0 ;CLK_SRC_CPU, MUX_A/MPLL out => FINPLL
+	wait 0.1s
+
+	; Set CMU_DMC MUX  to FINPLL not affected by PLL modification
+	d.s SD:0x10040200 %LE %LONG 0x10000 ;CLK_SRC_DMC, MUX out => SCLK_MPLL
+	wait 0.1s
+
+	; Set CMU_TOP0 MUX Path to FINPLL not affected by PLL modification
+	d.s SD:0x1003C210 %LE %LONG 0x1	; CLK_SRC_TOP0, Select source to FIN or MPLL
+	wait 0.1s
+
+	; Set CMU_TOP1 MUX Path to FINPLL not affected by PLL modification
+	d.s SD:0x1003C214 %LE %LONG 0x0	; CLK_SRC_TOP1, Select source to FIN or MPLL
+	wait 0.1s
+
+	; Set CMU_LEFTBUS MUX Path to FINPLL not affected by PLL modification
+	d.s SD:0x10034200 %LE %LONG 0x10 ; CLK_SRC_LEFTBUS
+	wait 0.1s
+
+	; Set CMU_RIGHTBUS MUX Path to FINPLL not affected by PLL modification
+	d.s SD:0x10038200 %LE %LONG 0x10 ; CLK_SRC_RIGHTBUS
+	wait 0.1s
+
+	d.s SD:0x10040500 %LE %LONG &CLK_DIV_DMC0
+	d.s SD:0x10040504 %LE %LONG &CLK_DIV_DMC1 ; Even if PWI_RATIO set to Max, It can't be meet sclk_pwi's range(6~30).
+
+	d.s SD:0x1003C510 %LE %LONG &CLK_DIV_TOP ; CLK_DIV_TOP
+	d.s SD:0x10034500 %LE %LONG &CLK_DIV_LEFTBUS ; CLK_DIV_LEFTBUS
+	d.s SD:0x10038500 %LE %LONG &CLK_DIV_RIGHTBUS ; CLK_DIV_RIGHTBUS
+	d.s SD:0x1003C544 %LE %LONG &CLK_DIV_FSYS1 ; CLK_DIV_FSYS1: MMC0, MMC1 DIV
+	d.s SD:0x1003C548 %LE %LONG &CLK_DIV_FSYS2 ; CLK_DIV_FSYS2: MMC2, MMC3 DIV
+	d.s SD:0x1003C54C %LE %LONG &CLK_DIV_FSYS2 ; CLK_DIV_FSYS3: MMC4 DIV
+
+	d.s SD:0x10048300 %LE %LONG &CLK_DIV_ISP0 ; CLK_DIV_ISP0: ISPDIV1_RATIO, ISPDIV0_RATIO
+	d.s SD:0x10048304 %LE %LONG &CLK_DIV_ISP1 ; CLK_DIV_ISP1: MCUISPDIV1_RATIO, MCUISPDIV0_RATIO, MPWMDIV_RATIO
+	d.s SD:0x1003C520 %LE %LONG &CLK_DIV_CAM ; CLK_DIV_CAM: CSIS1/0_RATIO, CAM1/0_RATIO, FIMC3/2/1/0_LCLK_RATIO
+
+	; Set PLL Lock Time in cycles for APLL, MPLL, EPLL & VPLL where 1 cycle = 1/(FINPLLxP)
+	; PLL3500X for APLL & MPLL; PLL3600X for EPLL & VPLL
+	d.s SD:0x10044000 %LE %LONG 0x000002FA; APLL_LOCK, Locktime: 762(250*12) cycles where P:12,  FIN: 24MHz
+	d.s SD:0x10044008 %LE %LONG 0x000002FA; MPLL_LOCK, Locktime: 762(250*12) cycles where P:12,  FIN: 24MHz
+	d.s SD:0x1003C010 %LE %LONG 0x00008CA0; EPLL_LOCK, Locktime: 36000(3000*12) cycles where P:12,  FIN: 24MHz
+	d.s SD:0x1003C020 %LE %LONG 0x00008CA0; VPLL_LOCK, Locktime: 36000(3000*12) cycles where P:12,  FIN: 24MHz
+
+	; Set APLL P, M, S values using MSC PLL tool
+	d.s SD:0x10044500 %LE %LONG &CLK_DIV_CPU0 ; CLK_DIV_CPU0
+	d.s SD:0x10044504 %LE %LONG &CLK_DIV_CPU1 ; CLK_DIV_CPU1, CLK_DIV_CPU1[10:8]: CORES_RATIO for QUAD
+	d.s SD:0x10044104 %LE %LONG &APLL_CON1 ; APLL_CON1
+	d.s SD:0x10044100 %LE %LONG &APLL_CON0 ; APLL_CON0(P,M,S)for APLL with 24MHz FINPLL
+
+	; Set MPLL P, M, S values using MSC PLL tool
+	d.s SD:0x1004010C %LE %LONG &MPLL_CON1 ; MPLL_CON1
+	d.s SD:0x10040108 %LE %LONG &MPLL_CON0 ; MPLL_CON0(P,M,S)for MPLL with 24MHz FINPLL
+
+	; Set EPLL P, M, S, K values using MSC PLL tool
+	d.s SD:0x1003C118 %LE %LONG &EPLL_CON2 ; EPLL_CON2
+	d.s SD:0x1003C114 %LE %LONG &EPLL_CON1 ; EPLL_CON1
+	d.s SD:0x1003C110 %LE %LONG &EPLL_CON0 ; EPLL_CON0(P,M,S,K)for EPLL with 24MHz FINPLL
+
+	; Set VPLL P, M, S, K values using MSC PLL tool
+	d.s SD:0x1003C128 %LE %LONG &VPLL_CON2 ; VPLL_CON2
+	d.s SD:0x1003C124 %LE %LONG &VPLL_CON1 ; VPLL_CON1, K:0
+	d.s SD:0x1003C120 %LE %LONG &VPLL_CON0 ; VPLL_CON0(P,M,S,K)for VPLL with 24MHz FINPLL
+	wait 0.3s
+
+	; Set CMU_CPU MUX Path
+	d.s SD:0x10044200 %LE %LONG 0x01000001	;CLK_SRC_CPU, MUX_APLL out => APLL out, HPM & CPU
+	wait 0.3s
+
+	; Set CMU_DMC MUX Path
+	d.s SD:0x10040200 %LE %LONG 0x00011000	;CLK_SRC_DMC, MUX_MPLL out => MPLL out, G2D_ACP, DMC & C2C
+	wait 0.3s
+
+	; Set CMU_TOP MUX Path
+	d.s SD:0x1003C210 %LE %LONG 0x00000110	;CLK_SRC_TOP0	MUX_E/VPLL out => PLL out, BUS(Main BUS)
+	d.s SD:0x1003C214 %LE %LONG 0x01101000	;CLK_SRC_TOP1	BUS(ISP,GPS)
+	wait 0.1s
+
+	; Set MUXAUDIO
+	d.s SD:0x1003C23C %LE %LONG 0x00000007	;CLK_SRC_MAUDIO, SCLKEPLL
+	wait 0.3s
+
+	; Set SCLK_MMC0~4 MUX Path
+	d.s SD:0x1003C240 %LE %LONG 0x00066666	;CLK_SRC_FSYS, MMC0_SEL~MMC4_SEL
+	wait 0.3s
+
+	; Set SCLK_MFC MUX Path
+	d.s SD:0x1003C228 %LE %LONG 0x00000000	;CLK_SRC_MFC, MFC_0_SEL,  MFC_SEL
+	wait 0.3s
+
+	; Set SCLK_JPEG MUX Path
+	d.s SD:0x1003C258 %LE %LONG 0x00000000	;CLK_SRC_CAM1, JPEG_0_SEL,  JPEG_SEL
+	wait 0.3s
+
+	; Set SCLK_G3D MUX Path
+	d.s SD:0x1003C22C %LE %LONG 0x00000110	;CLK_SRC_G3D; G3D_0_SEL,  G3D_SEL
+	wait 0.3s
+
+	print "pll enable"
+)
+
+; CLKOUT from ARMCLK/2 in CMU_CPU
+d.s SD:0x10020A00 %LE %LONG 0x00000400 ;PMU_DEBUG ( CLKOUT = CMU_CPU ), enable
+d.s SD:0x10044A00 %LE %LONG 0x00010904 ;CLKOUT_CMU_CPU	( CMU_CLKOUT = ARMCLK/2 )
+
+; for monitoring MPLL,EPLL,VPLL
+;d.s SD:0x10020A00 %LE %LONG 0x00000101 ;PMU_DEBUG ( CLKOUT = CMU_TOP )
+;d.s SD:0x1003CA00 %LE %LONG 0x0001090C ;CLKOUT_CMU_TOP	( CMU_CLKOUT = ACLK_200 )
+;d.s SD:0x1003CA00 %LE %LONG 0x00010900 ;CLKOUT_CMU_TOP	( CMU_CLKOUT = EPLLOUT )
+;d.s SD:0x1003CA00 %LE %LONG 0x00010901 ;CLKOUT_CMU_TOP	( CMU_CLKOUT = VPLLOUT )
+
+print "Clock Initialization done..."
+
+
+;------------------------------------------------------------------------------
+;- DREX initialization  <DDR3 only for pegasus>
+;------------------------------------------------------------------------------
+;- DREX0/1
+;------------------------------------------------------------------------------;
+&DMC0_BASE=0x10600000
+&DMC1_BASE=0x10610000
+&CH=0
+&DRAM_ADDR_BASE=0x40
+
+
+while &CH<2
+(
+	if &CH==0
+	(
+		&DMC_BASE=&DMC0_BASE
+	)
+	else
+	(
+		&DMC_BASE=&DMC1_BASE
+	)
+	; PhyControl
+	; ----------
+	d.s SD:&DMC_BASE+0x20 %LE %LONG 0x00000000
+	d.s SD:&DMC_BASE+0x24 %LE %LONG 0x00000000
+	d.s SD:&DMC_BASE+0x44 %LE %LONG 0xE3855503	;PhyZQ // disable PhyZQControl.ctrl_zq_mode_noterm and enable PhyZQControl.ctrl_zq_start
+
+	d.s SD:&DMC_BASE+0x18 %LE %LONG 0x71101008	;PhyControl0 // PhyControl0.ctrl_force to maximum value
+	d.s SD:&DMC_BASE+0x18 %LE %LONG 0x7110100A	;PhyControl0 // PhyControl0.ctrl_dll_on bit-field to 1
+	d.s SD:&DMC_BASE+0x1C %LE %LONG 0x20000086	;PhyControl1 // PhyControl1.ctrl_shiftc=4, PhyControl1.ctrl_offsetc=0
+	d.s SD:&DMC_BASE+0x18 %LE %LONG 0x71101008	;PhyControl0 // PhyControl0.ctrl_dll_on bit-field to 0
+
+	d.s SD:&DMC_BASE+0x1C %LE %LONG 0x2000008E	;PhyControl1 // PhyControl1.fp_resync bit-field to 1
+	d.s SD:&DMC_BASE+0x1C %LE %LONG 0x20000086	;PhyControl1 // PhyControl1.fp_resync bit-field to 0
+	d.s SD:&DMC_BASE+0x1C %LE %LONG 0x2000008E	;PhyControl1 // PhyControl1.fp_resync bit-field to 1
+	d.s SD:&DMC_BASE+0x1C %LE %LONG 0x20000086	;PhyControl1 // PhyControl1.fp_resync bit-field to 0
+
+	; ConControl
+	; ----------
+	d.s SD:&DMC_BASE+0x00 %LE %LONG 0x0FFF30CA
+	; [27:16]=0xFFF timeout_level0
+	; [12]=3 rd_fetch
+	; [7:6]=3 drv_type, [5]=0 auto refresh off, [4]=0 pdn_dq_disable
+	; [3]=1 io_pd_con, [2:1]=1 ACLK:MCLK=1:2
+
+	; MemControl
+	; ----------
+	d.s SD:&DMC_BASE+0x04 %LE %LONG 0x00302600
+	; [22:20]=3 bl=8
+	; [19:16]=0 1chip
+	; [15:12]=2 mem_width=32
+	; [11:8]=6 DDR3
+	; [5] dynamic self refresh off
+	; [4] timeout precharge off
+	; [1] dynamic power down off
+	; [0] dynamic clock control off
+
+	; MemConfig0
+	; ----------
+
+	d.s SD:&DMC_BASE+0x08 %LE %LONG 0x00C01323|(&DRAM_ADDR_BASE<<24.)	;MemConfig0
+	; [31:24]=0x40/0x60 base address
+	; [23:16]=0xC0 mask=512MB
+	; [15:12]=1 Interleave map
+	; [11:8]=3 col=10bit
+	; [7:4]=2 row=14bit
+	; [3:0]=3 8bank
+
+	; IvControl
+	; -----------
+	d.s SD:&DMC_BASE+0xF0 %LE %LONG (0x80000000|&IV_SIZE)	;Interleave on
+
+
+	; PrechConfig
+	; -----------
+	d.s SD:&DMC_BASE+0x14 %LE %LONG 0x64000000	;PrechConfig
+	; TP count = 100
+
+	; PwrdnConfig
+	; -----------
+	d.s SD:&DMC_BASE+0x18 %LE %LONG 0x9C4000FF	;PwrdnConfig
+	; DPWRDN_CYC = 255
+	; DSREF_CYC = 40000
+
+	; Timing Param @mclk=400MHz or 330MHz
+	; -----------------------------------
+	d.s SD:&DMC_BASE+0x30 %LE %LONG 0x000000BB	;TimingAref	7.8us*24MHz=187(0xBB)
+
+	;---------------------------------------------------------------------------
+	; TIMINGROW
+	d.s SD:&DMC_BASE+0x34 %LE %LONG 0x4046654F
+
+	;---------------------------------------------------------------------------
+	; TIMINGDATA
+	d.s SD:&DMC_BASE+0x38 %LE %LONG 0x46400506
+
+	;---------------------------------------------------------------------------
+	; TIMINGPOWER
+	d.s SD:&DMC_BASE+0x3C %LE %LONG 0x52000A3C
+
+
+	; Direct Command
+	; --------------
+	wait 0.1s ; wait 100ns
+	d.s SD:&DMC_BASE+0x10 %LE %LONG 0x07000000	;DirectCmd	chip0 Deselect, NOP
+	wait 0.1s ; wait 200us
+	d.s SD:&DMC_BASE+0x10 %LE %LONG 0x00020000	;DirectCmd	EMRS2
+	wait 0.1s ; wait 20us ;
+	d.s SD:&DMC_BASE+0x10 %LE %LONG 0x00030000	;DirectCmd	EMRS3
+	wait 0.1s ; wait 1us
+	d.s SD:&DMC_BASE+0x10 %LE %LONG 0x00010000	;DirectCmd	EMRS1
+	d.s SD:&DMC_BASE+0x10 %LE %LONG 0x00000100	;DirectCmd	MRS  DLL reset
+	wait 0.1s ; wait 1us
+	d.s SD:&DMC_BASE+0x10 %LE %LONG 0x00000420	;DirectCmd	MRS
+	wait 0.1s ; wait 1us
+	d.s SD:&DMC_BASE+0x10 %LE %LONG 0x0A000000	;DirectCmd	ZQINIT
+	wait 0.1s ; wait 1us
+
+	;------------------------------------------------------------------------------;
+	; DREX0, DREX1 DLL PHY ON
+	;------------------------------------------------------------------------------;
+
+	if &DMC_DLL_ON==1
+	(
+		if &DMC_LOW_DLL==1
+		(
+			d.s SD:&DMC_BASE+0x18 %LE %LONG 0x6910100E	;PhyControl0	DLL on (low speed)
+		)
+		ELSE
+		(
+			d.s SD:&DMC_BASE+0x18 %LE %LONG 0x7110100A	;PhyControl0	DLL on
+		)
+		d.s SD:&DMC_BASE+0x1C %LE %LONG 0x20000086	;PhyControl1 // PhyControl1.ctrl_shiftc=4, PhyControl1.ctrl_offsetc=0
+
+		d.s SD:&DMC_BASE+0x18 %LE %LONG 0x7110100B	;PhyControl0	DLL start
+		wait 0.2s ; // Check whether PHY DLL is locked
+
+		d.s SD:&DMC_BASE+0x1C %LE %LONG 0x2000008E	;PhyControl1 // PhyControl1.fp_resync bit-field to 1
+		d.s SD:&DMC_BASE+0x1C %LE %LONG 0x20000086	;PhyControl1 // PhyControl1.fp_resync bit-field to 0
+
+		wait 0.2s ; // Check whether PHY DLL is locked
+		if &DMC_USE_FORCE==1
+		(
+			&READ=Data.Long(SD:&DMC_BASE+0x40);
+			print &READ
+			&TEMP=(&READ>>6.)&0xFF
+			print &TEMP
+			d.s SD:&DMC_BASE+0x18 %LE %LONG 0x00101008
+			d.s SD:&DMC_BASE+0x18 %LE %LONG 0x00101008|(&TEMP<<24.)
+
+			d.s SD:&DMC_BASE+0x1C %LE %LONG 0x2000008E	;PhyControl1 // PhyControl1.fp_resync bit-field to 1
+			wait 0.1s
+			d.s SD:&DMC_BASE+0x1C %LE %LONG 0x20000086	;PhyControl1 // PhyControl1.fp_resync bit-field to 0
+		)
+
+	)
+	&CH=&CH+1
+)
+
+&CH=0
+while &CH<2
+(
+	if &CH==0
+	(
+		&DMC_BASE=&DMC0_BASE
+	)
+	else
+	(
+		&DMC_BASE=&DMC1_BASE
+	)
+
+	; ConControl
+	; ----------
+	&READ=Data.Long(SD:&DMC_BASE+0x00);
+	&READ=&READ|(1<<5.);
+	d.s SD:&DMC_BASE+0x00 %LE %LONG &READ
+	;[5]=1 auto refresh on
+
+
+	; MemControl
+	; ----------
+	&READ=Data.Long(SD:&DMC_BASE+0x04);
+	&READ=&READ|(1<<4.)|(1<<1.)|(1<<0)
+	d.s SD:&DMC_BASE+0x04 %LE %LONG &READ
+	; [22:20]=3 bl=8
+	; [19:16]=0 1chip
+	; [15:12]=2 mem_width=32
+	; [11:8]=6 DDR3
+	; [5] dynamic self refresh off
+	; [4] timeout precharge off
+	; [1] dynamic power down off
+	; [0] dynamic clock control off
+
+	&CH=&CH+1
+)
+print "DRAM Initialization done..."
+
+
+;------------------------------------------------------------------------------
+;- Semi hosting Init
+;------------------------------------------------------------------------------
+if &SEMIHOSTING==1
+(
+  term.reset
+  TrOnchip.Set SWI ON
+  TERM.METHOD ARMSWI
+  term.gate
+)
+
+;------------------------------------------------------------------------------
+;- TZASC Init
+;------------------------------------------------------------------------------
+if &TZASC_EN==1
+(
+ d.s SD:0x1011081C %LE %LONG 0x40
+)
+
+;------------------------------------------------------------------------------;
+; Load IMAGE                                                                   ;
+;------------------------------------------------------------------------------;
+
+print "Loading ..."
+
+&PATH_FOR_BL1="w:\android_imgs"
+&PATH_FOR_BL2="w:\uboot\s5pc210\201012\gerrit_up4\u-boot-samsung-dev\bl2"
+;&PATH_FOR_BL2="w:\uboot\s5pc210\201012\gerrit_bl2\u-boot-samsung-dev\bl2"
+;&PATH_FOR_UBOOT="w:\uboot\gerrit_uboot1\u-boot-samsung-dev"
+&PATH_FOR_UBOOT="w:\uboot\gerrit_uboot2\u-boot-samsung-dev"
+
+&PATH_FOR_TZSW="w:\uboot\s5pc210\201012\gerrit_up4\u-boot-samsung-dev\bl2"
+&PATH_FOR_KERNEL="w:\android_imgs\gerrit_kernel0\android-kernel-samsung-dev"
+;&PATH_FOR_KERNEL="w:\uboot\gerrit_kernel\android-kernel-samsung-dev"
+
+&PATH_FOR_ROOTFS="w:\android_imgs\icecream\pegasus\emmc"
+
+&UBOOT_CODE="&PATH_FOR_UBOOT\u-boot"
+&UBOOT_EXECUTED_ADDRESS=0x43E00000
+
+&BL1_IMAGE="&PATH_FOR_BL1\E4212.nbl1.bin"
+&BL2_IMAGE="&PATH_FOR_BL2\bl2.bin"
+&TZSW_IMAGE="&PATH_FOR_TZSW\tzsw.bin"
+&UBOOT_IMAGE="&PATH_FOR_UBOOT\u-boot.bin"
+&KERNEL_IMAGE="&PATH_FOR_KERNEL\arch\arm\boot\zImage"
+&ROOTFS_IMAGE="&PATH_FOR_ROOTFS\ramdisk-uboot.img"
+
+print "Loading ..."
+
+	;Data.LOAD.Binary	"E4412_N.bl1.bin"	0x40000000
+	;Data.LOAD.Binary	"bl2.bin"	0x40004000
+	;Data.LOAD.Binary	&TZSW_IMAGE	0x42100000
+	;Data.LOAD.Binary	&UBOOT_IMAGE	0x42000000
+	Data.LOAD.Binary	"u-boot.bin"	&UBOOT_EXECUTED_ADDRESS
+
+	;Data.LOAD.ELF		&UBOOT_CODE /ABSLIFETIMES /gcc3 /gnu /nocode /STRIPPART 3 /path w:\.
+	;Data.LOAD.ELF		&PATH_FOR_KERNEL\vmlinux /ABSLIFETIMES /gcc3 /gnu /nocode /STRIPPART 3 /path w:\.
+
+	r.set pc &UBOOT_EXECUTED_ADDRESS
+
+	b.delete
+
+	d.list
+
+print "loading ... done."
+
+if &USE_SWO==1		;; PTM sys.up
+(
+	sys.down
+	sys.config swdp on	 ;; ETM on automatically. You should do this on sys.down
+	sys.up
+
+	etm.off		 ;; It should be off ETM
+	itm.off
+	itm.on
+	itm.pm NRZ
+
+	ca.init
+	ca.dm SWV
+	ca.exportclock 25Mhz
+)
+
+
+ENDDO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

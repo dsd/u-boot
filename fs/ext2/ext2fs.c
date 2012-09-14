@@ -35,6 +35,12 @@
 DECLARE_GLOBAL_DATA_PTR;
 #endif
 
+#if defined(CONFIG_W30_DVT)
+extern unsigned int second_boot_info;
+extern int bl_current;
+extern void bl_control(int status);
+#endif
+
 extern int ext2fs_devread (int sector, int byte_offset, int byte_len,
 			   char *buf);
 
@@ -1472,6 +1478,11 @@ int ext2fs_format(block_dev_desc_t *dev_desc, int part_no, char set_journaling)
 				printf("---------------------------------------------------%d\n", i+1);
 		}
 		*/
+
+#if defined(CONFIG_W30_DVT)
+		if (second_boot_info == 1)
+			bl_control(!bl_current);
+#endif
 
 		/* Write super-block to mmc */
 		start_block = info.start + (bgcnt * 0x8000 * 4096 / 512);

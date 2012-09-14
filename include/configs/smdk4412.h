@@ -230,7 +230,7 @@
 #define CONFIG_BOOTDELAY	3
 /* Default boot commands for Android booting. */
 #ifdef CONFIG_SECURE_BOOT
-#define CONFIG_BOOTCOMMAND	"emmc open 0; movi read fwbl1 0 40000000; emmc close 0; movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
+#define CONFIG_BOOTCOMMAND	"emmc open 0; movi read zero fwbl1 0 40000000; emmc close 0; movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
 #else
 #define CONFIG_BOOTCOMMAND	"movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
 #endif

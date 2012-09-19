@@ -398,7 +398,19 @@ int board_late_init (void)
 	}
 	#endif
 
-	setenv("bootcmd", CONFIG_BOOTCOMMAND);
+//-->antaur
+	int tmp=*(int *)0x11000c08;
+	*(int *)0x11000c08=(tmp&(~0xc000));
+	udelay(10000);
+	if ((*(int *)0x11000c04 & 0x80)!=0x80) {
+		setenv ("bootargs", "androidboot.mode=charger");
+		printf("charger mode\n");
+	} else {
+		setenv ("bootargs", "");
+	}
+	*(int *)0x11000c08=tmp;
+//<--antaur
+
 #ifdef CONFIG_CPU_EXYNOS4X12
 	keystate = board_key_check();
 

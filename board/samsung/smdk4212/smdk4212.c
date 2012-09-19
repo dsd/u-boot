@@ -434,13 +434,13 @@ int board_late_init (void)
 		setenv ("reserved", "fastboot");
 		setenv ("bootdelay", "0");
 	} else
-	if((INF_REG4_REG == 0xf) || keystate == (0x1 | 0x4)) {
+	if((INF_REG4_REG == 0xf) || keystate == (0x1 | 0x2 | 0x4)) {
 		// reboot recovery
 		printf("BOOTLOADER - RECOVERY\n");
 		setenv ("reserved", CONFIG_BOOTCMD_RECOVERY);
 		setenv ("bootdelay", "0");
 	} else
-	if(keystate == (0x1 | 0x2 | 0x4) || second_boot_info != 0 || partition_check()) {
+	if(keystate == (0x1 | 0x4) || second_boot_info != 0 || partition_check()) {
 		// 2nd boot
 		printf("BOOTLOADER - 2ND BOOT DEVICE\n");
 		setenv ("bootcmd", CONFIG_BOOTCOMMAND);

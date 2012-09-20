@@ -399,8 +399,13 @@ int board_late_init (void)
 	#endif
 
 //-->antaur
+  if ((*(int *)0x10020800==0x19721212) || (*(int *)0x10020804==0x19721212)
+|| (*(int *)0x10020808==0x19721212)) {
+    setenv ("bootargs", "");
+  } else  {
 	int tmp=*(int *)0x11000c08;
-	*(int *)0x11000c08=(tmp&(~0xc000));
+    *(int *)0x10020800=*(int *)0x10020804=*(int *)0x10020808=0x19721212;
+    *(int *)0x11000c08=(tmp&(~0xc000))|0xc000;
 	udelay(10000);
 	if ((*(int *)0x11000c04 & 0x80)!=0x80) {
 		setenv ("bootargs", "androidboot.mode=charger");
@@ -409,6 +414,7 @@ int board_late_init (void)
 		setenv ("bootargs", "");
 	}
 	*(int *)0x11000c08=tmp;
+  }
 //<--antaur
 
 #ifdef CONFIG_CPU_EXYNOS4X12

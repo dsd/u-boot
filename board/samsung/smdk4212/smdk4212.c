@@ -373,7 +373,7 @@ int board_late_init (void)
 	}
 #endif
 
-	#if 1  //zxh
+	#if 0  //zxh
 	GPIO_Init();
 	/* Init GPIO key for polling special key */
 	/* printf("board_late_init, init GPIO key\n");*/
@@ -398,7 +398,7 @@ int board_late_init (void)
 	}
 	#endif
 
-
+	setenv("bootcmd", CONFIG_BOOTCOMMAND);
 #ifdef CONFIG_CPU_EXYNOS4X12
 	keystate = board_key_check();
 

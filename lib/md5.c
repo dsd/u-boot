@@ -118,10 +118,12 @@ MD5Update(struct MD5Context *ctx, unsigned char const *buf, unsigned len)
 		buf += 64;
 		len -= 64;
 #if defined(CONFIG_W30_DVT)
+	 #ifdef CONFIG_FLASH_SD_FUSE
 		if (second_boot_info == 1 && ++cnt > 4000) {
 			bl_control(!bl_current);
 			cnt = 0;
 		}
+	#endif
 #endif
 	}
 

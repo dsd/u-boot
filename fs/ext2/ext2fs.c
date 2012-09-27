@@ -1480,8 +1480,10 @@ int ext2fs_format(block_dev_desc_t *dev_desc, int part_no, char set_journaling)
 		*/
 
 #if defined(CONFIG_W30_DVT)
+	#ifdef CONFIG_FLASH_SD_FUSE
 		if (second_boot_info == 1)
 			bl_control(!bl_current);
+	#endif
 #endif
 
 		/* Write super-block to mmc */

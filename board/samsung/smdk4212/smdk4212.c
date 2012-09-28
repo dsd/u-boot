@@ -53,6 +53,8 @@ unsigned int second_boot_info = 0xffffffff;
 #define SROM_WAIT_ENABLE(x)	(1<<((x*4)+1))
 #define SROM_BYTE_ENABLE(x)	(1<<((x*4)+2))
 
+extern void CheckBatteryLow(void);
+
 /*
  * Miscellaneous platform dependent initialisations
  */
@@ -397,6 +399,8 @@ int board_late_init (void)
 	}
 	#endif
 
+
+
 	printf("check start mode\n");
 
 //-->antaur
@@ -417,7 +421,7 @@ int board_late_init (void)
 	*(int *)0x11000c08=tmp;
   }
 //<--antaur
-	
+
 #ifdef CONFIG_CPU_EXYNOS4X12
 	keystate = board_key_check();
 
@@ -427,7 +431,7 @@ int board_late_init (void)
 		#ifdef CONFIG_LOGO_DISPLAY
 		printf("lcd init_0\n");
 		Exynos_LCD_turnon();
-		exynos_display_pic(2);  //add by  zxh 
+		exynos_display_pic(2);  //add by  zxh
 		#endif
 		run_command(CONFIG_BOOTCMD_FUSE_BOOTLOADER, NULL);
 	}
@@ -458,7 +462,7 @@ int board_late_init (void)
 		#ifdef CONFIG_LOGO_DISPLAY
 		printf("lcd init\n");
 		Exynos_LCD_turnon();
-		exynos_display_pic(2);  //add by  zxh 
+		exynos_display_pic(2);  //add by  zxh
 		#endif
 		setenv ("bootcmd", CONFIG_BOOTCOMMAND);
 		setenv ("reserved", CONFIG_BOOTCMD_FUSE_RELEASE);
@@ -468,6 +472,8 @@ int board_late_init (void)
 		char buf[10];
 		sprintf(buf, "%d", CONFIG_BOOTDELAY);
 		setenv ("bootdelay", buf);
+
+		CheckBatteryLow();
 	}
 	INF_REG4_REG = 0;
 #endif

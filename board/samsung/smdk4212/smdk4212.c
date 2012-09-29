@@ -192,7 +192,6 @@ int board_init(void)
 	} else if (OmPin == BOOT_EMMC_4_4) {
 		printf(" EMMC4.41\n");
 	}
-
 	return 0;
 }
 
@@ -398,10 +397,11 @@ int board_late_init (void)
 	}
 	#endif
 	#ifdef CONFIG_LOGO_DISPLAY
+	printf("lcd init\n");
 	Exynos_LCD_turnon();
 	exynos_display_pic(2);  //add by  zxh 
 	#endif
-
+	printf("check start mode\n");
 
 //-->antaur
   if ((*(int *)0x10020800==0x19721212) || (*(int *)0x10020804==0x19721212)
@@ -421,7 +421,7 @@ int board_late_init (void)
 	*(int *)0x11000c08=tmp;
   }
 //<--antaur
-
+	
 #ifdef CONFIG_CPU_EXYNOS4X12
 	keystate = board_key_check();
 

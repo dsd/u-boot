@@ -485,5 +485,22 @@
 #define CFG_PHY_KERNEL_BASE	MEMORY_BASE_ADDRESS + 0x8000
 
 #define MEMORY_BASE_ADDRESS	0x40000000
+/*-----LCD---------*/
+#define CONFIG_LOGO_DISPLAY
+
+#ifdef CONFIG_LOGO_DISPLAY
+#define CFG_LCD_NONAME1
+#define CFG_LCD_FBUFFER				(0x4c000000)
+#define PART_SIZE_LOGO		(80*1024) // 80KB
+#define CFG_MAX_LOGO_NUM			6 // 6 pic to show
+#define LOGO_PARTITION_START (14*1024*1024) 
+
+#define BOOT_LOGO 		0  	
+#define BATTERY_LOGO 	1
+#define	RECOVERY_LOGO 	4  
+#define UPDATING_LOGO 	5
+
+#endif
+
 
 #endif	/* __CONFIG_H */

@@ -31,6 +31,11 @@ void bl_control(int status)
 	GPIO_SET_CON(BACKLIGHT, 1);
 
 	if (status) {
+			
+		#ifdef CONFIG_LOGO_DISPLAY
+		Exynos_LCD_turnon();
+		exynos_display_pic(2);
+		#endif
 		//printf("backlight on\n");
 		GPIO_SET_DAT(BACKLIGHT, 1);
 		bl_current = 1;

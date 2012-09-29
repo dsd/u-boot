@@ -54,7 +54,7 @@ COBJS	+= movi_partition.o
 COBJS	+= sys_info.o
 COBJS	+= clock.o
 COBJS	+= setup_hsmmc.o
-
+COBJS	+= fimd.o
 SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
 OBJS	:= $(addprefix $(obj),$(COBJS) $(SOBJS))
 

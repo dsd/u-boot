@@ -397,6 +397,11 @@ int board_late_init (void)
 		setenv("bootdelay", boot_cmd);
 	}
 	#endif
+	#ifdef CONFIG_LOGO_DISPLAY
+	Exynos_LCD_turnon();
+	exynos_display_pic(2);  //add by  zxh 
+	#endif
+
 
 //-->antaur
   if ((*(int *)0x10020800==0x19721212) || (*(int *)0x10020804==0x19721212)

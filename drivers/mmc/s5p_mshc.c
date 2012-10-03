@@ -454,8 +454,10 @@ s5p_mshc_send_command(struct mmc *mmc, struct mmc_cmd *cmd,
 			printf("unexpected condition 0x%x\n",mask);
 		}
 #if defined(CONFIG_W30_DVT)
+	 #ifdef CONFIG_FLASH_SD_FUSE
 		if (second_boot_info == 1)
 			bl_control(!bl_current);
+	#endif
 #endif
 		/* make sure disable IDMAC and IDMAC_Interrupts */
 		mshci_writel(host, (mshci_readl(host, MSHCI_CTRL) & 

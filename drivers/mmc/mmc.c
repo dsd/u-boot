@@ -1479,8 +1479,10 @@ int mmc_erase(struct mmc *mmc, int part, u32 start, u32 block)
 		if (!(count%(4000*dis))) {
 			printf("\n");
 #if defined(CONFIG_W30_DVT)
+	 #ifdef CONFIG_FLASH_SD_FUSE
 			if (second_boot_info == 1)
 				bl_control(!bl_current);
+	 #endif
 #endif
 		}
 	}

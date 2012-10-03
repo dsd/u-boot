@@ -243,8 +243,10 @@ s3c_hsmmc_send_command(struct mmc *mmc, struct mmc_cmd *cmd,
 			dbg("r/w is done\n");
 		}
 #if defined(CONFIG_W30_DVT)
+	 #ifdef CONFIG_FLASH_SD_FUSE
 		if (second_boot_info == 1)
 			bl_control(!bl_current);
+	#endif
 #endif
 	}
 

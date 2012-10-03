@@ -396,11 +396,7 @@ int board_late_init (void)
 		setenv("bootdelay", boot_cmd);
 	}
 	#endif
-	#ifdef CONFIG_LOGO_DISPLAY
-	printf("lcd init\n");
-	Exynos_LCD_turnon();
-	exynos_display_pic(2);  //add by  zxh 
-	#endif
+
 	printf("check start mode\n");
 
 //-->antaur
@@ -454,6 +450,11 @@ int board_late_init (void)
 	if(keystate == (0x1 | 0x4) || second_boot_info != 0 || partition_check()) {
 		// 2nd boot
 		printf("BOOTLOADER - 2ND BOOT DEVICE\n");
+		#ifdef CONFIG_LOGO_DISPLAY
+		printf("lcd init\n");
+		Exynos_LCD_turnon();
+		exynos_display_pic(2);  //add by  zxh 
+		#endif
 		setenv ("bootcmd", CONFIG_BOOTCOMMAND);
 		setenv ("reserved", CONFIG_BOOTCMD_FUSE_RELEASE);
 		setenv ("bootdelay", "0");

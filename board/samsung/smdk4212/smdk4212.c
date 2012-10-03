@@ -424,6 +424,11 @@ int board_late_init (void)
 	// fuse bootloader
 	if(second_boot_info != 0) {
 		//pcbatest_memory();
+		#ifdef CONFIG_LOGO_DISPLAY
+		printf("lcd init_0\n");
+		Exynos_LCD_turnon();
+		exynos_display_pic(2);  //add by  zxh 
+		#endif
 		run_command(CONFIG_BOOTCMD_FUSE_BOOTLOADER, NULL);
 	}
 

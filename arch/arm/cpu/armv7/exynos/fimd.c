@@ -14,6 +14,7 @@
 #include <asm/types.h>
 #include "s5pc210.h"
 #include "movi.h"
+
 #define LCD_BGCOLOR		0x1428A0
 
 static unsigned int gFgColor = 0xFF;
@@ -361,12 +362,13 @@ void lcd_gpio_init(void)
 	
 	Outp32(GPL2CON, ((Inp32(GPL2CON) & (~(0xf <<16)))|0x01<<(16)));  //gpl2_4  bl_en
 	Outp32(GPL2DAT, (Inp32(GPL2DAT) | (0x1<<4)));
-
+	Delay(20);	
 	Outp32(GPC1CON,(Inp32(GPC1CON)&(~(0xf << 8)))|(0x1 << 8));
 	Outp32(GPC1DAT,Inp32(GPC1DAT)&(~(0x1 << 2))|(0x0 << 2));    //gpc1_2  lcd_en
-
+	Delay(20);	
 	Outp32(GPD0CON,(Inp32(GPD0CON) & (~(0xf<<4)))|(0x1<<4)); //
 	Outp32(GPD0DAT,(Inp32(GPD0DAT) & (~(0x1 << 1)))|(0x0 << 1)); // gpd0_1  pwm_en
+	Delay(20);	
 #endif
 	//printf("6) Enable Backlight!-->GPC1[1]: output high -->enable\n");
 
@@ -585,7 +587,7 @@ void exynos_show_logo (const unsigned char * buf)
 			iBitmapData = 0xFFFC<<18;
 			iBitmapData |= ((0x0000)&0xf800)<<2;
 			iBitmapData |= ((0x0000)&0x07e0)<<1;
-			iBitmapData |= ((0xdddd)&0x1f)<<1;
+			iBitmapData |= ((0x0000)&0x1f)<<1;
 			*(pBuffer+(i*1280)+j) = iBitmapData;
 			pBitmap++;
 		}
@@ -594,6 +596,48 @@ void exynos_show_logo (const unsigned char * buf)
 #endif
 
 }
+
+//extern const unsigned char gImage_logo[23250];
+void s5p_lcd_word( unsigned char * buf,int width,int height)
+{
+	char *tmp_point=buf;
+	unsigned long i, j, sx, sy ;
+	unsigned long* pBuffer = (unsigned long*)CFG_LCD_FBUFFER;
+	unsigned short* pBitmap = tmp_point;//(unsigned short*)buf;
+	unsigned long iBitmapData;
+
+	sx = (900-width)>>1;
+	sy = (768-height)>>1;
+	//sy -= 20;
+	sx += 200;
+
+	for (i=sy; i<sy+height; i++)
+	{
+		for (j=sx; j<sx+width; j++)
+		{
+		#if 0/*modified by huangyuxiang 2011.2.16*/
+			iBitmapData = 0xFF<<24;
+			iBitmapData |= ((*pBitmap>>8)&0xF8)<<16;
+			iBitmapData |= ((*pBitmap>>5)&0x3F)<<10;
+			iBitmapData |= ((*pBitmap<<3)&0xF8);
+		#else
+		//	*pBitmap=0x1117;
+			iBitmapData = 0xFF<<24;
+	//		printf("#######0x%x  %x%x\n",*pBitmap,*buf,*(buf++));
+		//	udelay(1000000);
+		//	iBitmapData |= ((*pBitmap>>8)&0xF8)<<16;
+			iBitmapData |= ((*pBitmap>>11)&0x1f)<<16;
+			iBitmapData |= ((*pBitmap>>5)&0x3F)<<8;
+			iBitmapData |= ((*pBitmap<<3)&0xF8);
+		#endif/*modify end */
+			*(pBuffer+(i*1280)+j) = iBitmapData;
+			pBitmap++;
+		}
+	}
+}
+
+
+
 
 unsigned  char* logo_buf;
 
@@ -605,6 +649,8 @@ void exynos_get_logo(int index)
 	sprintf(run_cmd,"movi %s logo 0x%x %x","read",logo_buf,index);
 	run_command(run_cmd,0);
 }
+extern const unsigned char update[38400];
+extern const unsigned char logo[26950];
 void exynos_display_pic(int index)
 {
 	int i = 0;
@@ -624,7 +670,10 @@ void exynos_display_pic(int index)
 	#endif
 	if(index == 1)
 	{
-		 for(i = 1;i<4;i++)
+		exynos_show_logo(logo_buf);
+		s5p_lcd_word(&update[0],300,64);
+		#if 0
+		for(i = 1;i<4;i++)
 		 {
 			//exynos_get_logo(i);
 	 		exynos_show_logo(logo_buf);
@@ -632,11 +681,13 @@ void exynos_display_pic(int index)
 			udelay(8000000);
 			udelay(8000000);
 		 }
+		#endif
 	}
 	else
 	{
 			//exynos_get_logo(index);
 	 		exynos_show_logo(logo_buf);
+			s5p_lcd_word(&logo[0],245,55);
 	}
 	free(logo_buf);
 

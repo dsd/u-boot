@@ -374,6 +374,8 @@ int board_late_init (void)
 	}
 #endif
 
+	
+
 	#if 0  //zxh
 	GPIO_Init();
 	/* Init GPIO key for polling special key */
@@ -431,7 +433,7 @@ int board_late_init (void)
 		#ifdef CONFIG_LOGO_DISPLAY
 		printf("lcd init_0\n");
 		Exynos_LCD_turnon();
-		exynos_display_pic(2);  //add by  zxh
+		exynos_display_pic(1);  //add by  zxh
 		#endif
 		run_command(CONFIG_BOOTCMD_FUSE_BOOTLOADER, NULL);
 	}
@@ -446,6 +448,11 @@ int board_late_init (void)
 	} else
 	if((INF_REG4_REG == 0xe) || keystate == (0x1 | 0x2)) {
 		// reboot bootloader
+		#ifdef CONFIG_LOGO_DISPLAY
+		printf("lcd init_1\n");
+		Exynos_LCD_turnon();
+		exynos_display_pic(2);  //add by  zxh
+		#endif
 		printf("BOOTLOADER - FASTBOOT\n");
 		setenv ("reserved", "fastboot");
 		setenv ("bootdelay", "0");
@@ -453,6 +460,11 @@ int board_late_init (void)
 	if((INF_REG4_REG == 0xf) || keystate == (0x1 | 0x2 | 0x4)) {
 		// reboot recovery
 		printf("BOOTLOADER - RECOVERY\n");
+		#ifdef CONFIG_LOGO_DISPLAY
+		printf("lcd init_2\n");
+		Exynos_LCD_turnon();
+		exynos_display_pic(2);  //add by  zxh
+		#endif
 		setenv ("reserved", CONFIG_BOOTCMD_RECOVERY);
 		setenv ("bootdelay", "0");
 	} else
@@ -460,9 +472,9 @@ int board_late_init (void)
 		// 2nd boot
 		printf("BOOTLOADER - 2ND BOOT DEVICE\n");
 		#ifdef CONFIG_LOGO_DISPLAY
-		printf("lcd init\n");
+		printf("lcd init_3\n");
 		Exynos_LCD_turnon();
-		exynos_display_pic(2);  //add by  zxh
+		exynos_display_pic(1);  //add by  zxh
 		#endif
 		setenv ("bootcmd", CONFIG_BOOTCOMMAND);
 		setenv ("reserved", CONFIG_BOOTCMD_FUSE_RELEASE);
@@ -470,6 +482,11 @@ int board_late_init (void)
 	} else {
 		// normal case
 		char buf[10];
+		#ifdef CONFIG_LOGO_DISPLAY
+		printf("lcd init_4\n");
+		Exynos_LCD_turnon();
+		exynos_display_pic(2);  //add by  zxh
+		#endif
 		sprintf(buf, "%d", CONFIG_BOOTDELAY);
 		setenv ("bootdelay", buf);
 

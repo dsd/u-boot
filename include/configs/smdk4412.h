@@ -149,7 +149,7 @@
 #define CONFIG_PM_VDD_MIF	1.1
 #define CONFIG_PM_VDD_LDO14	1.8
 
-
+#define CONFIG_RAM_CONSOLE_LEN	(4*1024*1024)	// 4*1024 MB
 /*
  * Size of malloc() pool
  * 1MB = 0x100000, 0x100000 = 1024 * 1024

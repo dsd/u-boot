@@ -232,7 +232,7 @@
 #define CONFIG_SERVERIP		192.168.0.10
 #define CONFIG_GATEWAYIP	192.168.0.1
 
-#define CONFIG_BOOTDELAY	3
+#define CONFIG_BOOTDELAY	1
 /* Default boot commands for Android booting. */
 #define CONFIG_BOOTCOMMAND	"run reserved;movi read kernel 0 40008000;movi read rootfs 0 41000000;bootm 40008000 41000000"
 /*

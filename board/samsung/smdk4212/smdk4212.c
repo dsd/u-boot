@@ -485,8 +485,8 @@ int board_late_init (void)
 		char buf[10];
 		#ifdef CONFIG_LOGO_DISPLAY
 		printf("lcd init_4\n");
-		Exynos_LCD_turnon();
-		exynos_display_pic(2);  //add by  zxh
+	//	Exynos_LCD_turnon();  //del
+	//	exynos_display_pic(2);  //add by  zxh
 		#endif
 		sprintf(buf, "%d", CONFIG_BOOTDELAY);
 		setenv ("bootdelay", buf);

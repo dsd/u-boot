@@ -362,7 +362,7 @@ int pcbatest_memory(void)
 		"fdisk -c 0 300 14000 200;"					\
 		"fastboot;"					\
 
-
+int boot_symbol=0;
 int board_late_init (void)
 {
 	int keystate = 0;
@@ -428,7 +428,7 @@ int board_late_init (void)
   }
 //<--antaur
 
-
+  
 #ifdef CONFIG_CPU_EXYNOS4X12
 	int charge_status=CheckBatteryLow();
 	keystate=board_key_check();
@@ -440,6 +440,7 @@ int board_late_init (void)
 		Exynos_LCD_turnon();
 		exynos_display_pic(1);  //add by  zxh
 		#endif
+		boot_symbol=1;
 		run_command(CONFIG_BOOTCMD_FUSE_BOOTLOADER, NULL);
 	}
 
@@ -458,6 +459,7 @@ int board_late_init (void)
 		Exynos_LCD_turnon();
 		exynos_display_pic(2);  //add by  zxh
 		#endif
+		boot_symbol=1;
 		printf("BOOTLOADER - FASTBOOT\n");
 		setenv ("reserved", "fastboot");
 		setenv ("bootdelay", "0");
@@ -469,6 +471,7 @@ int board_late_init (void)
 		printf("lcd init_2\n");
 		Exynos_LCD_turnon();
 		exynos_display_pic(2);  //add by  zxh
+		boot_symbol=1;
 		#endif
 		setenv ("reserved", CONFIG_BOOTCMD_RECOVERY);
 		setenv ("bootdelay", "0");
@@ -481,6 +484,7 @@ int board_late_init (void)
 		Exynos_LCD_turnon();
 		exynos_display_pic(1);  //add by  zxh
 		#endif
+		boot_symbol=1;
 		setenv ("bootcmd", CONFIG_BOOTCOMMAND);
 		setenv ("reserved", CONFIG_BOOTCMD_FUSE_RELEASE);
 		setenv ("bootdelay", "0");

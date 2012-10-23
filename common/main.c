@@ -404,12 +404,14 @@ void main_loop (void)
 	
 
 #if 1
-
+	extern int boot_symbol;
 	extern int board_key_check(void);
 	extern int CheckBatteryLow(void);
 	int charge_status=CheckBatteryLow();
 	int i=1;
 	int keystate = 0;
+	if(boot_symbol==0)
+	{
 	while(i<3)
 	{
 	keystate = board_key_check();
@@ -424,7 +426,7 @@ void main_loop (void)
 	i++;
 	}
 
-
+	}
 #endif
 	
 # ifndef CONFIG_SYS_HUSH_PARSER

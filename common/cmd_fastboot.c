@@ -1662,6 +1662,7 @@ int do_fastboot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	struct fastboot_ptentry *ptn;
 	unsigned int addr, size;
 	gflag_reboot = 0;
+	INF_REG2_REG =0x8;
 /* checking boot mode before to set partition table	*/
 	switch(OmPin) {
 		case BOOT_ONENAND:

@@ -424,7 +424,7 @@ int board_late_init (void)
 	} else {
 		setenv ("bootargs", "");
 	}
-	//*(int *)0x11000c08=tmp;
+	*(int *)0x11000c08=tmp;
   }
 //<--antaur
 

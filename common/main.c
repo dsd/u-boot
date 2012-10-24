@@ -33,7 +33,7 @@
 #ifdef CONFIG_MODEM_SUPPORT
 #include <malloc.h>		/* for free() prototype */
 #endif
-
+#include <asm/arch/cpu.h>
 #ifdef CONFIG_SYS_HUSH_PARSER
 #include <hush.h>
 #endif
@@ -410,7 +410,7 @@ void main_loop (void)
 	int charge_status=CheckBatteryLow();
 	int i=1;
 	int keystate = 0;
-	if(boot_symbol==0)
+	if(INF_REG2_REG !=0x8)
 	{
 	while(i<3)
 	{
@@ -427,6 +427,7 @@ void main_loop (void)
 	}
 
 	}
+	//*(int *)0x1002080c=0x0;
 #endif
 	
 # ifndef CONFIG_SYS_HUSH_PARSER

@@ -415,7 +415,7 @@ int board_late_init (void)
     setenv ("bootargs", "");
   } else  {
 	int tmp=*(int *)0x11000c08;
-    *(int *)0x10020800=*(int *)0x10020804=*(int *)0x10020808=0x19721212;
+    *(int *)0x10020800=*(int *)0x10020804=0x19721212;
     *(int *)0x11000c08=(tmp&(~0xc000))|0xc000;
 	udelay(10000);
 	if ((*(int *)0x11000c04 & 0x80)!=0x80) {
@@ -424,7 +424,7 @@ int board_late_init (void)
 	} else {
 		setenv ("bootargs", "");
 	}
-	*(int *)0x11000c08=tmp;
+	//*(int *)0x11000c08=tmp;
   }
 //<--antaur
 
@@ -441,6 +441,7 @@ int board_late_init (void)
 		exynos_display_pic(1);  //add by  zxh
 		#endif
 		boot_symbol=1;
+		INF_REG2_REG =0x8;
 		run_command(CONFIG_BOOTCMD_FUSE_BOOTLOADER, NULL);
 	}
 
@@ -460,6 +461,7 @@ int board_late_init (void)
 		exynos_display_pic(2);  //add by  zxh
 		#endif
 		boot_symbol=1;
+		INF_REG2_REG =0x8;
 		printf("BOOTLOADER - FASTBOOT\n");
 		setenv ("reserved", "fastboot");
 		setenv ("bootdelay", "0");
@@ -472,6 +474,7 @@ int board_late_init (void)
 		Exynos_LCD_turnon();
 		exynos_display_pic(2);  //add by  zxh
 		boot_symbol=1;
+		INF_REG2_REG =0x8;
 		#endif
 		setenv ("reserved", CONFIG_BOOTCMD_RECOVERY);
 		setenv ("bootdelay", "0");
@@ -485,6 +488,7 @@ int board_late_init (void)
 		exynos_display_pic(1);  //add by  zxh
 		#endif
 		boot_symbol=1;
+		INF_REG2_REG =0x8;
 		setenv ("bootcmd", CONFIG_BOOTCOMMAND);
 		setenv ("reserved", CONFIG_BOOTCMD_FUSE_RELEASE);
 		setenv ("bootdelay", "0");

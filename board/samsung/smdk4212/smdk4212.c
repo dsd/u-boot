@@ -246,7 +246,7 @@ int checkboard(void)
 
 }
 #endif
-static  int power_status;
+
 int board_key_check(void)
 {
 	int keystate = 0;
@@ -431,7 +431,7 @@ int board_late_init (void)
 
 #ifdef CONFIG_CPU_EXYNOS4X12
 	int charge_status=CheckBatteryLow();
-
+	keystate=board_key_check();
 	// fuse bootloader
 	if(second_boot_info != 0) {
 		//pcbatest_memory();

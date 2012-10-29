@@ -401,7 +401,32 @@ void main_loop (void)
 # ifdef CONFIG_AUTOBOOT_KEYED
 		int prev = disable_ctrlc(1);	/* disable Control C checking */
 # endif
+	
 
+#if 1
+
+	extern int board_key_check(void);
+	extern int CheckBatteryLow(void);
+	int charge_status=CheckBatteryLow();
+	int i=1;
+	int keystate = 0;
+	while(i<3)
+	{
+	keystate = board_key_check();
+        if((keystate&0x1)!=0x1&&(charge_status==1))
+	{
+		//Outp32(0x1002330C, 0x5200);
+		 *(int *)0x1002330C=0x5200;
+		while(1);
+	}
+	
+	udelay(250000);
+	i++;
+	}
+
+
+#endif
+	
 # ifndef CONFIG_SYS_HUSH_PARSER
 		run_command (s, 0);
 # else

@@ -53,7 +53,7 @@ unsigned int second_boot_info = 0xffffffff;
 #define SROM_WAIT_ENABLE(x)	(1<<((x*4)+1))
 #define SROM_BYTE_ENABLE(x)	(1<<((x*4)+2))
 
-extern void CheckBatteryLow(void);
+extern int CheckBatteryLow(void);
 
 /*
  * Miscellaneous platform dependent initialisations
@@ -242,7 +242,7 @@ int checkboard(void)
 
 }
 #endif
-
+static  int power_status;
 int board_key_check(void)
 {
 	int keystate = 0;
@@ -426,7 +426,7 @@ int board_late_init (void)
 
 
 #ifdef CONFIG_CPU_EXYNOS4X12
-	keystate = board_key_check();
+	int charge_status=CheckBatteryLow();
 
 	// fuse bootloader
 	if(second_boot_info != 0) {
@@ -491,7 +491,7 @@ int board_late_init (void)
 		sprintf(buf, "%d", CONFIG_BOOTDELAY);
 		setenv ("bootdelay", buf);
 
-		CheckBatteryLow();
+		
 	}
 	INF_REG4_REG = 0;
 #endif

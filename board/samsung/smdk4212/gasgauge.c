@@ -280,7 +280,7 @@ void IIC2_ERead (unsigned char ChipId, unsigned char IicAddr, unsigned char *Iic
 }
 
 
-void CheckBatteryLow(void)
+int CheckBatteryLow(void)
 {
 	int SOC_percent = 0;
 	u8 read_dataH=1;
@@ -315,4 +315,5 @@ void CheckBatteryLow(void)
 		Outp32(0x1002330C, 0x5200);
 		while(1);
 	}
+	return charger_status;
 }

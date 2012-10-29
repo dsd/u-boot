@@ -222,6 +222,10 @@ void dram_init_banksize(void)
 #ifdef CONFIG_TRUSTZONE
 	gd->bd->bi_dram[nr_dram_banks - 1].size -= CONFIG_TRUSTZONE_RESERVED_DRAM;
 #endif
+
+#ifdef CONFIG_RAM_CONSOLE_LEN
+	gd->bd->bi_dram[nr_dram_banks - 1].size -= CONFIG_RAM_CONSOLE_LEN;
+#endif
 }
 
 int board_eth_init(bd_t *bis)

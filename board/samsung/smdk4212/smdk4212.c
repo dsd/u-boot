@@ -418,7 +418,7 @@ int board_late_init (void)
     *(int *)0x10020800=*(int *)0x10020804=0x19721212;
     *(int *)0x11000c08=(tmp&(~0xc000))|0xc000;
 	udelay(10000);
-	if ((*(int *)0x11000c04 & 0x80)!=0x80) {
+	if ((*(int *)0x11000c04 & 0x80)!=0x80 && INF_REG4_REG != 0xf) {
 		setenv ("bootargs", "androidboot.mode=charger");
 		printf("charger mode\n");
 	} else {
@@ -471,8 +471,8 @@ int board_late_init (void)
 		printf("BOOTLOADER - RECOVERY\n");
 		#ifdef CONFIG_LOGO_DISPLAY
 		printf("lcd init_2\n");
-		Exynos_LCD_turnon();
-		exynos_display_pic(2);  //add by  zxh
+		//Exynos_LCD_turnon();
+		//exynos_display_pic(2);  //add by  zxh
 		boot_symbol=1;
 		INF_REG2_REG =0x8;
 		#endif

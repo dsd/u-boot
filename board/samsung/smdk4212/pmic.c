@@ -738,7 +738,8 @@ void pmic_init(void)
 		IIC0_EWrite(MAX77686_ADDR, 0x57, 0xF2);
 
 		/*Set MRSTB Register: Program the Manual Reset ON/OFF and Debounce Timer*/
-		IIC0_EWrite(MAX77686_ADDR, 0x0A, 0x08);
+		//IIC0_EWrite(MAX77686_ADDR, 0x0A, 0x08);
+		IIC0_EWrite(MAX77686_ADDR, 0x0A, 0x0F);  //set reset time to 10 sec
 
 	}
 

@@ -14,6 +14,7 @@
 #include <asm/arch/cpu.h>
 #include <asm/arch/gpio.h>
 
+#define warm_boot 0x19721212
 unsigned int OmPin;
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -365,8 +366,8 @@ int pcbatest_memory(void)
 int boot_symbol=0;
 int board_late_init (void)
 {
-	int keystate = 0;
-
+	int DC_in, keystate = 0;
+	
 #ifdef CONFIG_UPDATE_SOLUTION
 	GPIO_Init();
 	GPIO_SetFunctionEach(eGPIO_X0, eGPIO_0, 0);
@@ -405,32 +406,21 @@ int board_late_init (void)
 	}
 	#endif
 
-
-
-	printf("check start mode\n");
-
-//-->antaur
-  if ((*(int *)0x10020800==0x19721212) || (*(int *)0x10020804==0x19721212)
-|| (*(int *)0x10020808==0x19721212)) {
-    setenv ("bootargs", "");
-  } else  {
-	int tmp=*(int *)0x11000c08;
-    *(int *)0x10020800=*(int *)0x10020804=0x19721212;
-    *(int *)0x11000c08=(tmp&(~0xc000))|0xc000;
-	udelay(10000);
-	if ((*(int *)0x11000c04 & 0x80)!=0x80 && INF_REG4_REG != 0xf) {
-		setenv ("bootargs", "androidboot.mode=charger");
-		printf("charger mode\n");
-	} else {
-		setenv ("bootargs", "");
-	}
-	*(int *)0x11000c08=tmp;
-  }
-//<--antaur
-
+    DC_in = CheckBatteryLow();
+    if ((INF_REG0_REG == warm_boot)) {
+	setenv ("bootargs", "");
+    } else  {
+        INF_REG0_REG = warm_boot;
+        if ((DC_in == 1) && (INF_REG4_REG != 0xf)) {
+            setenv ("bootargs", "androidboot.mode=charger");
+            printf("charger mode\n");
+        } else {
+            setenv ("bootargs", "");
+        }
+    }
+	
   
 #ifdef CONFIG_CPU_EXYNOS4X12
-	int charge_status=CheckBatteryLow();
 	keystate=board_key_check();
 	// fuse bootloader
 	if(second_boot_info != 0) {

@@ -285,23 +285,24 @@ int CheckBatteryLow(void)
 	int SOC_percent = 0;
 	u8 read_dataH=1;
 	u8 read_dataL=2;
-	int charger_status = 0;
+	int DC_in = 0;
 	int gpio_status = 0;
 
 	GPIO_Init();
 
 	//#GPIO_PM2301_LP
-	GPIO_SetFunctionEach(eGPIO_X1, eGPIO_7, 0);
-	GPIO_SetPullUpDownEach(eGPIO_X1, eGPIO_7,0);
+	//GPIO_SetFunctionEach(eGPIO_X1, eGPIO_7, 0);
+	//GPIO_SetPullUpDownEach(eGPIO_X1, eGPIO_7,0);
 	//GPIO_CHARGER_ONLINE
 	GPIO_SetFunctionEach(eGPIO_X0, eGPIO_7, 0);
 	GPIO_SetPullUpDownEach(eGPIO_X0, eGPIO_7,0);
 
-	gpio_status = GPIO_GetDataAll(eGPIO_X1);
-	gpio_status = GPIO_GetDataAll(eGPIO_X2);
-	gpio_status = GPIO_GetDataAll(eGPIO_X0);
-	charger_status = GPIO_GetDataEach(eGPIO_X0, eGPIO_7);
-	printf("charger_status=%d\n",charger_status);
+	//gpio_status = GPIO_GetDataAll(eGPIO_X1);
+	//gpio_status = GPIO_GetDataAll(eGPIO_X2);
+	//gpio_status = GPIO_GetDataAll(eGPIO_X0);
+	udelay(10);
+	DC_in = !(GPIO_GetDataEach(eGPIO_X0, eGPIO_7));
+	printf("DC_in : %d\n",DC_in);
 
 	IIC2_ESetport();
 	/* read ID */
@@ -310,10 +311,11 @@ int CheckBatteryLow(void)
 	SOC_percent = ((read_dataH << 8) + read_dataL) / 512;
 	printf("SOC_percent=%d\n",SOC_percent);
 	/* Check batt percent is 0% and not plug in DC, then power off devcies */
-	if(SOC_percent<1 && charger_status == 1) {
-		//PS_HOLD pull low to turn off PMIC
-		Outp32(0x1002330C, 0x5200);
-		while(1);
+	if(SOC_percent < 1 && DC_in == 0) {
+	    printf("Battery is too low \n");
+	    //PS_HOLD pull low to turn off PMIC
+	    Outp32(0x1002330C, 0x5200);
+	    while(1);
 	}
-	return charger_status;
+	return DC_in;
 }

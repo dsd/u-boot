@@ -412,19 +412,19 @@ void main_loop (void)
 	int keystate = 0;
 	if(INF_REG2_REG !=0x8)
 	{
-	while(i<3)
-	{
-	keystate = board_key_check();
-        if((keystate&0x1)!=0x1&&(charge_status==1))
-	{
-		//Outp32(0x1002330C, 0x5200);
-		 *(int *)0x1002330C=0x5200;
-		while(1);
-	}
+	    while(i<3)
+	    {
+		keystate = board_key_check();
+		if((keystate&0x1)!=0x1&&(charge_status==1))
+		{
+		    //Outp32(0x1002330C, 0x5200);
+		    *(int *)0x1002330C=0x5200;
+		    while(1);
+		}
 	
-	udelay(250000);
-	i++;
-	}
+		udelay(250000);
+		i++;
+	    }
 
 	}
 	//*(int *)0x1002080c=0x0;

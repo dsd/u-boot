@@ -637,6 +637,8 @@ get_cluster (fsdata *mydata, __u32 clustnum, __u8 *buffer,
 {
 	int idx = 0;
 	__u32 startsect;
+	unsigned long index=0;
+	unsigned long readsize=0;
 
 	if (clustnum > 0) {
 		startsect = mydata->data_begin +
@@ -644,12 +646,20 @@ get_cluster (fsdata *mydata, __u32 clustnum, __u8 *buffer,
 	} else {
 		startsect = mydata->rootdir_sect;
 	}
-
 	debug("gc - clustnum: %d, startsect: %d\n", clustnum, startsect);
+#define READ_PAGE_SIZE    64
 
-	if (disk_read(startsect, size / FS_BLOCK_SIZE, buffer) < 0) {
-		debug("Error reading data\n");
-		return -1;
+    for(index = 0 ;index < size / FS_BLOCK_SIZE ;index += READ_PAGE_SIZE){
+        if((index + READ_PAGE_SIZE) < (size / FS_BLOCK_SIZE)){
+        	readsize = READ_PAGE_SIZE;
+        }
+        else{
+        	readsize = ((size / FS_BLOCK_SIZE) - index);
+        }
+	    if (disk_read(startsect + index, readsize, buffer + (index * FS_BLOCK_SIZE)) < 0) {
+		    debug("Error reading data\n");
+		    return -1;
+	    }
 	}
 	if (size % FS_BLOCK_SIZE) {
 		__u8 tmpbuf[FS_BLOCK_SIZE];

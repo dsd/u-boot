@@ -78,6 +78,7 @@
 #include <mmc.h>
 #endif
 #include <decompress_ext4.h>
+#include <asm/arch/gpio.h>
 
 #if defined(CONFIG_S5P6450)
 DECLARE_GLOBAL_DATA_PTR;
@@ -520,7 +521,7 @@ static int write_to_ptn_sdmmc(struct fastboot_ptentry *ptn, unsigned int addr, u
 			sprintf(device, "mmc %d", DEV_NUM);
 			sprintf(buffer, "0x%x", addr);
 			sprintf(start, "0x%x", (ptn->start / CFG_FASTBOOT_SDMMC_BLOCKSIZE));
-			sprintf(length, "0x%x", ((size == 0 ? ptn->length : size) / CFG_FASTBOOT_SDMMC_BLOCKSIZE));
+			sprintf(length, "0x%x", (ptn->length / CFG_FASTBOOT_SDMMC_BLOCKSIZE));
 
 			ret = do_mmcops(NULL, 0, 6, argv);
 		} else {
@@ -1817,16 +1818,16 @@ U_BOOT_CMD(
 );
 
 
-#undef CONFIG_FASTBOOT_SDFUSE	// sdfuse is not implemented yet.
+//#undef CONFIG_FASTBOOT_SDFUSE	// sdfuse is not implemented yet.
 #ifdef CONFIG_FASTBOOT_SDFUSE
 
 #include <part.h>
 #include <fat.h>
 #define CFG_FASTBOOT_SDFUSE_DIR		"/sdfuse"
 #ifdef CFG_FASTBOOT_SDMMCBSP
-#define CFG_FASTBOOT_SDFUSE_MMCDEV	0
+#define CFG_FASTBOOT_SDFUSE_MMCDEV	1
 #else
-#define CFG_FASTBOOT_SDFUSE_MMCDEV	0
+#define CFG_FASTBOOT_SDFUSE_MMCDEV	1
 #endif
 #define CFG_FASTBOOT_SDFUSE_MMCPART	1
 /*
@@ -1914,7 +1915,7 @@ int do_sdfuse (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 
 	printf("[Fusing Image from SD Card.]\n");
 
-	if (set_partition_table())
+	if (set_partition_table_sdmmc())
 		return 1;
 
 	if ((argc == 2) && !strcmp(argv[1], "info"))
@@ -1942,16 +1943,69 @@ int do_sdfuse (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	else if ((argc == 2) && !strcmp(argv[1], "flashall"))
 	{
 		LCD_turnon();
-
-		if (update_from_sd("boot", "boot.img"))
-			goto err_sdfuse;
-		if (update_from_sd("system", "system.img"))
-			goto err_sdfuse;
-		if (update_from_sd("userdata", NULL))
-			goto err_sdfuse;
-		if (update_from_sd("cache", NULL))
-			goto err_sdfuse;
-
+/*	    GPIO_SetFunctionEach(eGPIO_C0, eGPIO_3, 1);
+	    GPIO_SetPullUpDownEach(eGPIO_C0, eGPIO_3, 0);
+	    GPIO_SetDataEach(eGPIO_C0, eGPIO_3, 1);
+	    GPIO_SetFunctionEach(eGPIO_C1, eGPIO_2, 1);
+	    GPIO_SetPullUpDownEach(eGPIO_C1, eGPIO_2, 0);
+	    GPIO_SetDataEach(eGPIO_C1, eGPIO_2, 1);
+	    GPIO_SetFunctionEach(eGPIO_K1, eGPIO_2, 1);
+	    GPIO_SetPullUpDownEach(eGPIO_K1, eGPIO_2, 0);
+	    GPIO_SetDataEach(eGPIO_K1, eGPIO_2, 1);*/
+		if (update_from_sd("fwbl1","E4412_N.bl1.bin")){
+			printf("**********update fwbl1 E4412_N.bl1.bin fail**********\r\n");
+			//goto err_sdfuse;
+		}
+	    LCD_setprogress(10);
+		if (update_from_sd("bl2","bl2.bin")){
+			printf("**********update bl2 bl2.bin fail**********\r\n");
+			//goto err_sdfuse;
+		}
+	    LCD_setprogress(20);
+		if (update_from_sd("bootloader","u-boot.bin")){
+			printf("**********update bootloader u-boot.bin fail**********\r\n");
+			//goto err_sdfuse;
+		}
+	    LCD_setprogress(30);
+		if (update_from_sd("tzsw","E4412_tzsw.bin")){
+			printf("**********update tzsw E4412_tzsw.bin fail**********\r\n");
+			//goto err_sdfuse;
+		}
+	    LCD_setprogress(40);
+		if (update_from_sd("boot","boot.img")){
+			printf("**********update boot  boot.img fail**********\r\n");
+			//goto err_sdfuse;
+		}
+	    LCD_setprogress(60);
+		if (update_from_sd("recoverykernel","zImage")){
+			printf("**********update recoverykernel zImage fail**********\r\n");
+			//goto err_sdfuse;
+		}
+		if (update_from_sd("recovery","ramdisk-recovery.img.ub")){
+			printf("**********update recovery cpramdisk-recovery.img.ub fail**********\r\n");
+			//goto err_sdfuse;
+		}
+	    LCD_setprogress(80);
+		if (update_from_sd("system","system.img")){
+			printf("**********update system system.img fail**********\r\n");
+			//goto err_sdfuse;
+		}
+		else{
+#if 0
+			if(update_from_sd("userdata",NULL)){
+		       printf("**********erase userdata userdata fail**********\r\n");
+			    //goto err_sdfuse;
+		    }
+#endif
+			if(update_from_sd("cache",NULL)){
+		       printf("**********erase cache fail**********\r\n");
+			    //goto err_sdfuse;
+		    }
+		}
+		if (update_from_sd("userdata","userdata.img")){
+			printf("**********update userdata userdata.img fail**********\r\n");
+			//goto err_sdfuse;
+		}
 		enable_reset = 1;
 		ret = 0;
 	}
@@ -2039,7 +2093,7 @@ void fastboot_flash_dump_ptn(void)
 	for (n = 0; n < pcount; n++)
 	{
 		fastboot_ptentry *ptn = ptable + n;
-#if 0	/* old format - decimal */
+#if 1	/* old format - decimal */
 		printf("ptn %d name='%s' start=%d len=%d\n",
 				n, ptn->name, ptn->start, ptn->length);
 #else

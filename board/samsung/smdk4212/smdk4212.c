@@ -418,12 +418,11 @@ int board_late_init (void)
             setenv ("bootargs", "");
         }
     }
-	
-  
+    printf("second_boot_info %d\n",second_boot_info);
 #ifdef CONFIG_CPU_EXYNOS4X12
 	keystate=board_key_check();
 	// fuse bootloader
-	if(second_boot_info != 0) {
+	if(second_boot_info == 1) {
 		//pcbatest_memory();
 		#ifdef CONFIG_LOGO_DISPLAY
 		printf("lcd init_0\n");
@@ -469,7 +468,7 @@ int board_late_init (void)
 		setenv ("reserved", CONFIG_BOOTCMD_RECOVERY);
 		setenv ("bootdelay", "0");
 	} else
-	if(keystate == (0x1 | 0x4) || second_boot_info != 0 || partition_check()) {
+	if(keystate == (0x1 | 0x4) || second_boot_info == 1 || partition_check()) {
 		// 2nd boot
 		printf("BOOTLOADER - 2ND BOOT DEVICE\n");
 		#ifdef CONFIG_LOGO_DISPLAY

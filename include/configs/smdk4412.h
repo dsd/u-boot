@@ -281,7 +281,10 @@
 #define CONFIG_BOOTCMD_FUSE_RELEASE	\
 		"if mmc read 1 47000000 1000 8; then source 47000000; fi;"	\
 		"if ext2load mmc 1:2 47000000 /mprelease.img 1000; then source 47000000; fi;"	\
-		"if fatload mmc 1:1 47000000 /mprelease.img 1000; then source 47000000; fi;"
+		"if fatload mmc 1:1 47000000 /mprelease.img 1000; then source 47000000; fi;" \
+		"env default -f; " \
+		"env save; "\
+		"sdfuse flashall"
 
 #define CONFIG_BOOTCMD_RECOVERY	\
 		"movi read recoverykernel 0 40008000;" \
@@ -481,6 +484,7 @@
 #define CONFIG_BOOT_ONENAND_IROM
 #define CONFIG_NAND
 #define CONFIG_BOOT_NAND
+#define CONFIG_FASTBOOT_SDFUSE                  "sdfuse flashall"
 
 #define CFG_PHY_UBOOT_BASE	MEMORY_BASE_ADDRESS + 0x3e00000
 #define CFG_PHY_KERNEL_BASE	MEMORY_BASE_ADDRESS + 0x8000

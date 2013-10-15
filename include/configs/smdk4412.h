@@ -495,7 +495,7 @@
 
 #ifdef CONFIG_LOGO_DISPLAY
 #define CFG_LCD_NONAME1
-#define CFG_LCD_FBUFFER				(0x5c000000)
+#define CFG_LCD_FBUFFER				(0x6c000000)
 #define PART_SIZE_LOGO		(80*1024) // 80KB
 #define CFG_MAX_LOGO_NUM			6 // 6 pic to show
 #define LOGO_PARTITION_START (14*1024*1024) 

@@ -1,0 +1,252 @@
+;------------------------------------------------------------------------------
+;-
+;- Filename	: Ex4x12_evt1_lpddr2.cmm
+;-
+;- Description	: Trace32 script
+;- Created at	: 2012/04/12
+;-
+;- Copyright(C) : Samsung Electronics, 2011, All rights reserved.
+;-
+;-----------------------------------------------------------------------------
+
+;------------------------------------------------------------------------------
+;- global variables initialization
+;------------------------------------------------------------------------------
+
+;;;;;;;;;; variables ;;;;;;;;;;
+
+; ARM
+LOCAL &CORE2_RATIO &APLL_RATIO &PCLK_DBG_RATIO &ATB_RATIO &PERIPH_RATIO &COREM1_RATIO
+LOCAL &COREM0_RATIO &CORE_RATIO &CORES_RATIO &HPM_RATIO &COPY_RATIO
+
+; MIF
+LOCAL &DMCP_RATIO &DMCD_RATIO &DMC_RATIO &DPHY_RATIO &ACP_PCLK_RATIO &ACP_RATIO
+LOCAL &DPM_RATIO &DVSEM_RATIO &C2C_ACLK_RATIO &PWI_RATIO &C2C_RATIO &G2D_ACP_RATIO
+
+; G3D
+LOCAL &G3D_RATIO
+
+; INT
+LOCAL &ACLK_400_MCUISP_RATIO &ACLK_266_GPS_RATIO &ONENAND_RATIO &ACLK_133_RATIO &ACLK_160_RATIO &ACLK_100_RATIO &ACLK_200_RATIO
+LOCAL &GPL_RATIO &GDL_RATIO &GPR_RATIO &GDR_RATIO &ISPDIV1_RATIO &ISPDIV0_RATIO &MCUISPDIV1_RATIO &MCUISPDIV0_RATIO &MPWMDIV_RATIO
+LOCAL &MFC_RATIO &JPEG_RATIO &CSIS1_RATIO &CSIS0_RATIO &CAM1_RATIO &CAM0_RATIO &FIMC3_LCLK_RATIO &FIMC2_LCLK_RATIO &FIMC1_LCLK_RATIO &FIMC0_LCLK_RATIO
+LOCAL &MMC1_PRE_RATIO &MMC1_RATIO &MMC0_PRE_RATIO &MMC0_RATIO &MMC3_PRE_RATIO &MMC3_RATIO &MMC2_PRE_RATIO &MMC2_RATIO &MMC4_PRE_RATIO &MMC4_RATIO
+
+;;;;;;;;;; registers ;;;;;;;;;;
+LOCAL &CLK_DIV_CPU0 &CLK_DIV_CPU1 &APLL_CON1 &APLL_CON0
+LOCAL &CLK_DIV_DMC0 &CLK_DIV_DMC1 &MPLL_CON1 &MPLL_CON0
+LOCAL &EPLL_CON2 &EPLL_CON1 &EPLL_CON0
+LOCAL &CLK_DIV_G3D &VPLL_CON2 &VPLL_CON1 &VPLL_CON0
+LOCAL &CLK_DIV_TOP &CLK_DIV_LEFTBUS &CLK_DIV_RIGHTBUS &CLK_DIV_ISP0 &CLK_DIV_ISP1 &CLK_DIV_MFC &CLK_DIV_CAM1 &CLK_DIV_CAM &CLK_DIV_FSYS1 &CLK_DIV_FSYS2 &CLK_DIV_FSYS3
+
+LOCAL &DMC_BASE &DMC0_BASE &DMC1_BASE &DRAM_ADDR_BASE
+
+;;;;;;;;; dvfs table constant ;;;;;;;;
+&ARM_L0='a'	; ARMCLK 1500MHz
+&ARM_L1='b'	; ARMCLK 1400MHz
+&ARM_L2='c'	; ARMCLK 1300MHz
+&ARM_L3='d'	; ARMCLK 1200MHz
+&ARM_L4='e'	; ARMCLK 1100MHz
+&ARM_L5='f'	; ARMCLK 1000MHz
+&ARM_L6='g'	; ARMCLK 900MHz
+&ARM_L7='h'	; ARMCLK 800MHz
+&ARM_L8='i'	; ARMCLK 700MHz
+&ARM_L9='j'	; ARMCLK 600MHz
+&ARM_L10='k'	; ARMCLK 500MHz
+&ARM_L11='l'	; ARMCLK 400MHz
+&ARM_L12='m'	; ARMCLK 300MHz
+&ARM_L13='n'	; ARMCLK 200MHz
+
+&MIF_L0='0'	; SCLKDMC 400MHz
+&MIF_L1='1'	; SCLKDMC 266MHz
+&MIF_L2='2'	; SCLKDMC 160MHz
+&MIF_L3='3'	; SCLKDMC 100MHz
+
+&INT_L0='o'	; BUS 200MHz
+&INT_L1='p'	; BUS 160MHz
+&INT_L2='q'	; BUS 100MHz
+
+&G3D_L0='w'	; SCLKG3D 440MHz
+&G3D_L1='x'	; SCLKG3D 350MHz
+&G3D_L2='y'	; SCLKG3D 266MHz
+&G3D_L3='z'	; SCLKG3D 160MHz
+
+;----------------------------------------------------------------------;
+; Configuring Option
+;----------------------------------------------------------------------;
+;;;;;;;;;----- USER SETTING VARIABLES -----;;;;;;;;;;;
+
+&DEV="EVT1"			;- "FPGA", "EVT0", or "EVT1", ...
+&CORE_NUM=0x1			;- Single: 0x1, Dual: 0x2, Quad: 0x4, ...
+
+;- CMU setting
+&USE_PLL=1.			;- FIN: 0, PLL: 1
+
+;; You can select DVFS level and dram setting
+&DVFS_ARM_LEVEL=&ARM_L7		;- &ARM_L0 ~ &ARM_L13
+&DVFS_MIF_LEVEL=&MIF_L0		;- &MIF_L0 ~ &MIF_L3
+&DVFS_INT_LEVEL=&INT_L0		;- &INT_L0 ~ &INT_L2
+&DVFS_G3D_LEVEL=&G3D_L1		;- &G3D_L0 ~ &G3D_L3
+
+;- DREX2 v1.1
+&USE_DLL=0x1			;- USE: 0x1, NOT USE: 0x0
+&MCLK=400			;- 12 or 400
+&IV_SIZE=0x7			;- 16-byte:0x4, 32-byte:0x5, 64-byte:0x6, 128-byte:0x7, 256-byte:0x8, 512-byte:0x9, ... until 2G-byte:0x1F
+LOCAL &READ &TEMP
+
+&DMC_DLL_ON=1
+;&DMC_DLL_ON=0
+&DMC_LOW_DLL=0
+;&DMC_USE_FORCE=1
+&DMC_USE_FORCE=0
+
+&AP_ODT_OFF='a'
+&AP_ODT_ON='b'
+&AP_ODT=&AP_ODT_OFF
+
+;- SemiHosting
+&SEMIHOSTING=0				;- SEMIHOSTING enable/disable
+
+;- Another debug method
+&USE_PTM=0			;- enable: 1, disable: 0
+&USE_SWO=0			;- enable: 1, disable: 0
+
+;- TZASC Enable
+&TZASC_EN=0			;- enable: 1, disable: 0
+
+;- Secure JTAG Enable
+&SJTAG_EN=0			;- enable: 1, disable: 0
+
+;------------------------------------------------------------------------------
+; CORE & JTAG initialization
+;------------------------------------------------------------------------------
+print "Reset System"
+
+;Symbol.Reset
+SYStem.RESet
+;MMU.RESet
+
+if &CORE_NUM==1
+(
+	print "Single CORE"
+	System.CPU CORTEXA9MPCORE
+	Sys.Config.COREBASE 0x80110000
+)
+else if &CORE_NUM==2
+(
+	print "Dual CORE"
+	System.CPU CORTEXA9MPCORESMP2
+	Sys.Config.COREBASE 0x80110000 0x80112000
+)
+else if &CORE_NUM==4
+(
+	print "Quad CORE"
+	System.CPU CORTEXA9MPCORESMP4
+	Sys.Config.COREBASE 0x80110000 0x80112000 0x80114000 0x80116000
+)
+else
+(
+	print "CORE initialization is failed."
+	ENDDO
+)
+;ETM.OFF
+System.JtagClock 12Mhz
+
+System.Option ResBreak OFF
+System.Option EnReset OFF
+Sys.Mode PREPARE
+Wait 0.1s
+
+if &SJTAG_EN==1		;; Secure JTAG Password
+(
+	;; Please write correct password before enable SJTAG_EN
+	d.s APB:0x10888010 %LE %LONG 0x00000000
+	d.s APB:0x10888010 %LE %LONG 0x00000000
+	d.s APB:0x10888010 %LE %LONG 0x00000000
+	d.s APB:0x10888010 %LE %LONG 0x00000000
+	d.s APB:0x10888010 %LE %LONG 0x00000000
+)
+
+;;; SYS.UP
+if &USE_PTM==1		;; PTM sys.up
+(
+	Sys.Config.COREBASE 0x80010000 0x80012000
+	Sys.Config.ETMBASE 0x8001c000 0x8001d000
+	Sys.Config.CTIBASE 0x80018000 0x80019000
+	Sys.Config.FUNNELBASE 0x80004000
+	Sys.Config.ETMFUNNELPORT 0. 1.
+	Sys.Config.TPIUBASE 0x80003000
+	Sys.Config.ETBBASE 0x80001000
+	sys.config.ITMBASE 0x80005000
+	sys.config.ITMFUNNELPORT 3.
+	ETM.OFF
+
+	System.Up
+	Wait 0.2s
+
+	; PTM GPIO setting E4212 @PTM func & drive strength 3x only operation
+	d.s SD:0x11000260 %LE %LONG 0x55555555	;GPM0CON
+	d.s SD:0x11000268 %LE %LONG 0x0		;GPM0PUD
+	d.s SD:0x1100026C %LE %LONG 0x5555	;GPM0DRV PTM only drive ok at this d.s.
+	d.s SD:0x11000280 %LE %LONG 0x05555555	;GPM1CON
+	d.s SD:0x11000288 %LE %LONG 0x0		;GPM1PUD
+	d.s SD:0x1100028C %LE %LONG 0x5555	;GPM1DRV
+	d.s SD:0x110002A0 %LE %LONG 0x555	;GPM2CON
+	d.s SD:0x110002A8 %LE %LONG 0x0		;GPM2PUD
+	d.s SD:0x110002AC %LE %LONG 0x5555	;GPM2DRV
+)
+else			;; normal sys.up
+(
+	System.Up
+	Wait 0.2s
+)
+
+
+;------------------------------------------------------------------------------;
+; Load IMAGE                                                                   ;
+;------------------------------------------------------------------------------;
+
+print "Loading ..."
+
+&PATH_FOR_BL1="w:\android_imgs"
+&PATH_FOR_BL2="w:\uboot\s5pc210\201012\gerrit_up4\u-boot-samsung-dev\bl2"
+;&PATH_FOR_BL2="w:\uboot\s5pc210\201012\gerrit_bl2\u-boot-samsung-dev\bl2"
+;&PATH_FOR_UBOOT="w:\uboot\gerrit_uboot1\u-boot-samsung-dev"
+&PATH_FOR_UBOOT="w:\uboot\gerrit_uboot2\u-boot-samsung-dev"
+
+&PATH_FOR_TZSW="w:\uboot\s5pc210\201012\gerrit_up4\u-boot-samsung-dev\bl2"
+&PATH_FOR_KERNEL="w:\android_imgs\gerrit_kernel0\android-kernel-samsung-dev"
+;&PATH_FOR_KERNEL="w:\uboot\gerrit_kernel\android-kernel-samsung-dev"
+
+&PATH_FOR_ROOTFS="w:\android_imgs\icecream\pegasus\emmc"
+
+&UBOOT_CODE="&PATH_FOR_UBOOT\u-boot"
+&UBOOT_EXECUTED_ADDRESS=0x43E00000
+
+&BL1_IMAGE="&PATH_FOR_BL1\E4212.nbl1.bin"
+&BL2_IMAGE="&PATH_FOR_BL2\bl2.bin"
+&TZSW_IMAGE="&PATH_FOR_TZSW\tzsw.bin"
+&UBOOT_IMAGE="&PATH_FOR_UBOOT\u-boot.bin"
+&KERNEL_IMAGE="&PATH_FOR_KERNEL\arch\arm\boot\zImage"
+&ROOTFS_IMAGE="&PATH_FOR_ROOTFS\ramdisk-uboot.img"
+
+print "Loading ..."
+
+	;Data.LOAD.Binary	"E4412_N.bl1.bin"	0x40000000
+	;Data.LOAD.Binary	"bl2.bin"	0x40004000
+	;Data.LOAD.Binary	&TZSW_IMAGE	0x42100000
+	;Data.LOAD.Binary	&UBOOT_IMAGE	0x42000000
+	Data.LOAD.Binary	"u-boot.bin"	&UBOOT_EXECUTED_ADDRESS
+
+	;Data.LOAD.ELF		&UBOOT_CODE /ABSLIFETIMES /gcc3 /gnu /nocode /STRIPPART 3 /path w:\.
+	;Data.LOAD.ELF		&PATH_FOR_KERNEL\vmlinux /ABSLIFETIMES /gcc3 /gnu /nocode /STRIPPART 3 /path w:\.
+
+	r.set pc &UBOOT_EXECUTED_ADDRESS
+
+	b.delete
+
+	d.list
+
+print "loading ... done."
+
+ENDDO

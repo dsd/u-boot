@@ -367,6 +367,7 @@ int boot_symbol=0;
 int board_late_init (void)
 {
 	int DC_in, keystate = 0;
+	char *str;
 	
 #ifdef CONFIG_UPDATE_SOLUTION
 	GPIO_Init();
@@ -406,16 +407,23 @@ int board_late_init (void)
 	}
 	#endif
 
+    if ((str = getenv("charging_screen")) == NULL) {
+        str = "true";
+    }
+
     DC_in = CheckBatteryLow();
-    if ((INF_REG0_REG == warm_boot)) {
-	setenv ("bootargs", "");
-    } else  {
-        INF_REG0_REG = warm_boot;
-        if ((DC_in == 1) && (INF_REG4_REG != 0xf)) {
-            setenv ("bootargs", "androidboot.mode=charger");
-            printf("charger mode\n");
-        } else {
-            setenv ("bootargs", "");
+    if (strcmp(str, "false")){
+	printf("charging_screen enable\n");
+        if ((INF_REG0_REG == warm_boot)) {
+    	setenv ("bootargs", "");
+        } else  {
+            INF_REG0_REG = warm_boot;
+            if ((DC_in == 1) && (INF_REG4_REG != 0xf)) {
+                setenv ("bootargs", "androidboot.mode=charger");
+                printf("charger mode\n");
+            } else {
+                setenv ("bootargs", "");
+            }
         }
     }
     printf("second_boot_info %d\n",second_boot_info);

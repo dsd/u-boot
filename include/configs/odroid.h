@@ -50,6 +50,8 @@
 #define CONFIG_SYS_CONSOLE_INFO_QUIET
 #define CONFIG_SYS_CONSOLE_IS_IN_ENV
 
+#define CONFIG_CMD_FS_GENERIC
+#define CONFIG_CMD_EXT4
 #define CONFIG_CMD_BOOTZ
 #define CONFIG_FIT
 #define CONFIG_FIT_VERBOSE
@@ -114,11 +116,11 @@
  * 2.  ROOT:  -
 */
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	"loadkernel=fatload mmc ${mmcbootdev}:${mmcbootpart} ${kerneladdr} " \
+	"loadkernel=load mmc ${mmcbootdev}:${mmcbootpart} ${kerneladdr} " \
 		"${kernelname}\0" \
-	"loadinitrd=fatload mmc ${mmcbootdev}:${mmcbootpart} ${initrdaddr} " \
+	"loadinitrd=load mmc ${mmcbootdev}:${mmcbootpart} ${initrdaddr} " \
 		"${initrdname}\0" \
-	"loaddtb=fatload mmc ${mmcbootdev}:${mmcbootpart} ${fdtaddr} " \
+	"loaddtb=load mmc ${mmcbootdev}:${mmcbootpart} ${fdtaddr} " \
 		"${fdtfile}\0" \
 	"check_ramdisk=" \
 		"if run loadinitrd; then " \
@@ -183,12 +185,12 @@
 	"fdtaddr=40800000\0" \
 	"importbootenv=" \
 		"echo >>> Importing environment from mmc ${mmcbootdev}:${mmcbootpart} <<<;" \
-		"fatload mmc ${mmcbootdev}:${mmcbootpart} 40008000 uEnv.txt;\" \
+		"load mmc ${mmcbootdev}:${mmcbootpart} 40008000 uEnv.txt;" \
 		"env import -t 40008000 ${filesize}\0" \
 	"uenvbootcmd=" \
 		"setenv kerneladdr 0x42000000;" \
-		"fatload mmc 0:1 ${kerneladdr} ${kernel_image};" \
-		"fatload mmc 0:1 ${initrdaddr} ${ramdisk_image};" \
+		"load mmc 0:1 ${kerneladdr} ${kernel_image};" \
+		"load mmc 0:1 ${initrdaddr} ${ramdisk_image};" \
 		"bootm ${kerneladdr}#${boardname} ${initrdaddr}\0"
 
 /* I2C */

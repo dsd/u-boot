@@ -158,7 +158,10 @@
 		"run kernel_args;" \
 		"bootz ${image_addr} ${ramdisk_addr};\0" \
 	"autoboot=" \
-		"if test -e mmc 0 Image.itb; then; " \
+		"if test -e mmc 0 uEnv.txt; then;" \
+			"run importbootenv;" \
+			"run uenvbootcmd;" \
+		"elif test -e mmc 0 Image.itb; then; " \
 			"run boot_fit;" \
 		"elif test -e mmc 0 zImage; then; " \
 			"run boot_zimg;" \
@@ -176,8 +179,17 @@
 	"consoleon=set console console=ttySAC1,115200n8; save; reset\0" \
 	"consoleoff=set console console=ram; save; reset\0" \
 	"initrdname=uInitrd\0" \
-	"initrdaddr=42000000\0" \
-	"fdtaddr=40800000\0"
+	"initrdaddr=41000000\0" \
+	"fdtaddr=40800000\0" \
+	"importbootenv=" \
+		"echo >>> Importing environment from mmc ${mmcbootdev}:${mmcbootpart} <<<;" \
+		"fatload mmc ${mmcbootdev}:${mmcbootpart} 40008000 uEnv.txt;\" \
+		"env import -t 40008000 ${filesize}\0" \
+	"uenvbootcmd=" \
+		"setenv kerneladdr 0x42000000;" \
+		"fatload mmc 0:1 ${kerneladdr} ${kernel_image};" \
+		"fatload mmc 0:1 ${initrdaddr} ${ramdisk_image};" \
+		"bootm ${kerneladdr}#${boardname} ${initrdaddr}\0"
 
 /* I2C */
 #define CONFIG_CMD_I2C

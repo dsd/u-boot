@@ -296,16 +296,16 @@ mem_ctrl_asm_init_ddr3:
 
 	ldr	r0, =APB_DMC_0_BASE 
 
-	ldr	r1, =0x0
-	str	r1, [r0, #DMC_PHYCONTROL2]
+	ldr r1, =0x00000000
+	str r1, [r0, #0x20]
 
-	ldr	r1, =0x0
-	str	r1, [r0, #0x24]
+	ldr r1, =0x00000000
+	str r1, [r0, #0x24]
 
 	ldr	r1, =0xE3855503
 	str	r1, [r0, #DMC_PHYZQCONTROL]
 
-	ldr	r1, =0x71101008				
+	ldr	r1, =0x71101008	
 	str	r1, [r0, #DMC_PHYCONTROL0]
 
 	ldr	r1, =0x7110100A				
@@ -317,45 +317,79 @@ mem_ctrl_asm_init_ddr3:
 	ldr	r1, =0x71101008				
 	str	r1, [r0, #DMC_PHYCONTROL0]
 
-	ldr	r1, =0x2000008E				
+	ldr	r1, =0x2000008E	
 	str	r1, [r0, #DMC_PHYCONTROL1]
 
-	ldr	r1, =0x20000086				
+	ldr	r1, =0x20000086
 	str	r1, [r0, #DMC_PHYCONTROL1]
 
-	ldr	r1, =0x2000008E				
+	ldr	r1, =0x2000008E	
 	str	r1, [r0, #DMC_PHYCONTROL1]
 
-	ldr	r1, =0x20000086				
+	ldr	r1, =0x20000086
 	str	r1, [r0, #DMC_PHYCONTROL1]
 
 	ldr	r1, =0x0FFF30CA
 	str	r1, [r0, #DMC_CONCONTROL]
 
-	ldr	r1, =0x00302600				
+	ldr r1, =0x00302600
 	str	r1, [r0, #DMC_MEMCONTROL]
 
-	ldr	r1, =0x40C01323	
+	/* 4Gb * 4 */
+	/*
+	ldr r1, =0x40801323
+	str	r1, [r0, #DMC_MEMCONFIG0]
+	*/
+
+	/* 2Gb * 8 */
+	ldr r1, =0x40801333
 	str	r1, [r0, #DMC_MEMCONFIG0]
 
-	ldr	r1, =(0x80000000 | CONFIG_IV_SIZE)
+	ldr	r1, =0x80000007
 	str	r1, [r0, #DMC_IVCONTROL]
 
+#ifdef CONFIG_EVT0_RECOMMEND
+	ldr	r1, =0x6400ffff
+#else
 	ldr	r1, =0x64000000			
+#endif
 	str	r1, [r0, #DMC_PRECHCONFIG]
 
 	ldr	r1, =0x9C4000FF			
 	str	r1, [r0, #DMC_PHYCONTROL0]
 
-	ldr	r1, =0x000000BB    				
+	ldr r1, =0x000000BB
 	str	r1, [r0, #DMC_TIMINGAREF] @TimingAref
 
-	ldr	r1, =0x4046654F  
+#ifdef MCLK_330
+	ldr	r1, =0x2b47654e				
+	str	r1, [r0, #DMC_TIMINGROW]
+	ldr	r1, =0x35330306			
+	str	r1, [r0, #DMC_TIMINGDATA]
+	ldr	r1, =0x442f0365				
+	str	r1, [r0, #DMC_TIMINGPOWER]
+#else
+#if defined(CONFIG_CLK_BUS_DMC_200_400)
+#ifdef CONFIG_EVT0_RECOMMEND
+	ldr	r1, =0x34A98691
+#else
+	ldr	r1, =0x34498691  
+#endif
+	ldr r1, =0x7846654F
 	str	r1, [r0, #DMC_TIMINGROW] @TimingRow
-	ldr	r1, =0x46400506    				
+	ldr r1, =0x46400506
 	str	r1, [r0, #DMC_TIMINGDATA] @TimingData
-	ldr	r1, =0x52000A3C    				
+	ldr r1, =0x52000A3C
 	str	r1, [r0, #DMC_TIMINGPOWER] @TimingPower
+#elif defined(CONFIG_CLK_BUS_DMC_220_440)
+	ldr	r1, =0x3A5A8713
+	str	r1, [r0, #DMC_TIMINGROW] @TimingRow
+	ldr	r1, =0x47400306
+	str	r1, [r0, #DMC_TIMINGDATA] @TimingData
+	ldr	r1, =0x583E0475
+	str	r1, [r0, #DMC_TIMINGPOWER] @TimingPower
+#endif
+#endif
 
 	/* minimum wait time is 100 nano seconds */
 	/* 0x64: wait 250 nano seconds at ARMCLK 1.5 Ghz */
@@ -370,7 +404,7 @@ mem_ctrl_asm_init_ddr3:
 	mov	r2, #0x19000
 	bl dmc_delay
 
-	ldr	r1, =0x00020000       				
+	ldr r1, =0x00020000
 	str	r1, [r0, #DMC_DIRECTCMD]
 
 	/* minimum wait time is 20 micro seconds */
@@ -378,7 +412,7 @@ mem_ctrl_asm_init_ddr3:
 	mov	r2, #0x2700
 	bl dmc_delay
 
-	ldr	r1, =0x00030000       				
+	ldr r1, =0x00030000
 	str	r1, [r0, #DMC_DIRECTCMD] 
 
 	/* minimum wait time is 1 micro seconds */
@@ -386,41 +420,62 @@ mem_ctrl_asm_init_ddr3:
 	mov	r2, #0x3f0
 	bl dmc_delay
 
-	ldr	r1, =0x00010000
+	ldr r1, =0x00010000
 	str	r1, [r0, #DMC_DIRECTCMD] 
-	ldr	r1, =0x00000100       				
+	ldr r1, =0x00000100
 	str	r1, [r0, #DMC_DIRECTCMD] 
 
-	mov	r2, #0x3f0
+	/* minimum wait time is 1 micro seconds */
+	mov r2, #0x3f0
 	bl dmc_delay
 
-	ldr	r1, =0x00000420       				
-	str	r1, [r0, #DMC_DIRECTCMD]
+	ldr r1, =0x00000420
+	str	r1, [r0, #DMC_DIRECTCMD] 
 
-	mov	r2, #0x3f0
+	/* minimum wait time is 1 micro seconds */
+	mov r2, #0x3f0
 	bl dmc_delay
 
-	ldr	r1, =0x0A000000
-	str	r1, [r0, #DMC_DIRECTCMD]
+	ldr r1, =0x0A000000
+	str r1, [r0, #DMC_DIRECTCMD]
 
-	mov	r2, #0x3f0
+	/* minimum wait time is 1 micro seconds */
+	mov r2, #0x3f0
 	bl dmc_delay
+
+	ldr r1, =0x7110100A
+	str r1, [r0, #DMC_PHYCONTROL0]
+	ldr r1, =0x20000086
+	str r1, [r0, #DMC_PHYCONTROL1]
+	ldr r1, =0x7110100B
+	str r1, [r0, #DMC_PHYCONTROL0]
+
+	mov r2, #0x19000
+	bl	dmc_delay
+
+	ldr r1, =0x2000008E
+	str r1, [r0, #DMC_PHYCONTROL1]
+	ldr r1, =0x20000086
+	str r1, [r0, #DMC_PHYCONTROL1]
+
+	mov r2, #0x19000
+	bl	dmc_delay
 
 /*****************************************************************/
 /*DREX1***********************************************************/
 /*****************************************************************/
-	ldr	r0, =APB_DMC_1_BASE 
+	ldr	r0, =APB_DMC_1_BASE
 
-	ldr	r1, =0x0
-	str	r1, [r0, #DMC_PHYCONTROL2]
+	ldr r1, =0x00000000
+	str r1, [r0, #0x20]
 
-	ldr	r1, =0x0
-	str	r1, [r0, #0x24]
+	ldr r1, =0x00000000
+	str r1, [r0, #0x24]
 
 	ldr	r1, =0xE3855503
 	str	r1, [r0, #DMC_PHYZQCONTROL]
 
-	ldr	r1, =0x71101008				
+	ldr	r1, =0x71101008	
 	str	r1, [r0, #DMC_PHYCONTROL0]
 
 	ldr	r1, =0x7110100A				
@@ -432,45 +487,79 @@ mem_ctrl_asm_init_ddr3:
 	ldr	r1, =0x71101008				
 	str	r1, [r0, #DMC_PHYCONTROL0]
 
-	ldr	r1, =0x2000008E				
+	ldr	r1, =0x2000008E	
 	str	r1, [r0, #DMC_PHYCONTROL1]
 
-	ldr	r1, =0x20000086				
+	ldr	r1, =0x20000086
 	str	r1, [r0, #DMC_PHYCONTROL1]
 
-	ldr	r1, =0x2000008E				
+	ldr	r1, =0x2000008E	
 	str	r1, [r0, #DMC_PHYCONTROL1]
 
-	ldr	r1, =0x20000086				
+	ldr	r1, =0x20000086
 	str	r1, [r0, #DMC_PHYCONTROL1]
 
 	ldr	r1, =0x0FFF30CA
 	str	r1, [r0, #DMC_CONCONTROL]
 
-	ldr	r1, =0x00302600				
+	ldr r1, =0x00302600
 	str	r1, [r0, #DMC_MEMCONTROL]
 
-	ldr	r1, =0x40C01323	
+	/* 4Gb * 4 */
+	/*
+	ldr r1, =0x40801323
+	str	r1, [r0, #DMC_MEMCONFIG0]
+	*/
+	
+	/* 2Gb * 8 */
+	ldr r1, =0x40801333
 	str	r1, [r0, #DMC_MEMCONFIG0]
 
-	ldr	r1, =(0x80000000 | CONFIG_IV_SIZE)
+	ldr	r1, =0x80000007
 	str	r1, [r0, #DMC_IVCONTROL]
 
+#ifdef CONFIG_EVT0_RECOMMEND
+	ldr	r1, =0x6400ffff
+#else
 	ldr	r1, =0x64000000			
+#endif
 	str	r1, [r0, #DMC_PRECHCONFIG]
 
 	ldr	r1, =0x9C4000FF			
 	str	r1, [r0, #DMC_PHYCONTROL0]
 
-	ldr	r1, =0x000000BB    				
+	ldr r1, =0x000000BB
 	str	r1, [r0, #DMC_TIMINGAREF] @TimingAref
 
-	ldr	r1, =0x4046654F  
+#ifdef MCLK_330
+	ldr	r1, =0x2b47654e				
+	str	r1, [r0, #DMC_TIMINGROW]
+	ldr	r1, =0x35330306			
+	str	r1, [r0, #DMC_TIMINGDATA]
+	ldr	r1, =0x442f0365				
+	str	r1, [r0, #DMC_TIMINGPOWER]
+#else
+#if defined(CONFIG_CLK_BUS_DMC_200_400)
+#ifdef CONFIG_EVT0_RECOMMEND
+	ldr	r1, =0x34A98691
+#else
+	ldr	r1, =0x34498691  
+#endif
+	ldr r1, =0x7846654F
 	str	r1, [r0, #DMC_TIMINGROW] @TimingRow
-	ldr	r1, =0x46400506    				
+	ldr r1, =0x46400506
 	str	r1, [r0, #DMC_TIMINGDATA] @TimingData
-	ldr	r1, =0x52000A3C    				
+	ldr r1, =0x52000A3C
 	str	r1, [r0, #DMC_TIMINGPOWER] @TimingPower
+#elif defined(CONFIG_CLK_BUS_DMC_220_440)
+	ldr	r1, =0x3A5A8713
+	str	r1, [r0, #DMC_TIMINGROW] @TimingRow
+	ldr	r1, =0x47400306
+	str	r1, [r0, #DMC_TIMINGDATA] @TimingData
+	ldr	r1, =0x583E0475
+	str	r1, [r0, #DMC_TIMINGPOWER] @TimingPower
+#endif
+#endif
 
 	/* minimum wait time is 100 nano seconds */
 	/* 0x64: wait 250 nano seconds at ARMCLK 1.5 Ghz */
@@ -485,7 +574,7 @@ mem_ctrl_asm_init_ddr3:
 	mov	r2, #0x19000
 	bl dmc_delay
 
-	ldr	r1, =0x00020000       				
+	ldr r1, =0x00020000
 	str	r1, [r0, #DMC_DIRECTCMD]
 
 	/* minimum wait time is 20 micro seconds */
@@ -493,7 +582,7 @@ mem_ctrl_asm_init_ddr3:
 	mov	r2, #0x2700
 	bl dmc_delay
 
-	ldr	r1, =0x00030000       				
+	ldr r1, =0x00030000
 	str	r1, [r0, #DMC_DIRECTCMD] 
 
 	/* minimum wait time is 1 micro seconds */
@@ -501,100 +590,75 @@ mem_ctrl_asm_init_ddr3:
 	mov	r2, #0x3f0
 	bl dmc_delay
 
-	ldr	r1, =0x00010000
+	ldr r1, =0x00010000
 	str	r1, [r0, #DMC_DIRECTCMD] 
-	ldr	r1, =0x00000100       				
+	ldr r1, =0x00000100
 	str	r1, [r0, #DMC_DIRECTCMD] 
 
-	mov	r2, #0x3f0
+	/* minimum wait time is 1 micro seconds */
+	mov r2, #0x3f0
 	bl dmc_delay
 
-	ldr	r1, =0x00000420       				
-	str	r1, [r0, #DMC_DIRECTCMD]
+	ldr r1, =0x00000420
+	str	r1, [r0, #DMC_DIRECTCMD] 
 
-	mov	r2, #0x3f0
+	/* minimum wait time is 1 micro seconds */
+	mov r2, #0x3f0
 	bl dmc_delay
 
-	ldr	r1, =0x0A000000
-	str	r1, [r0, #DMC_DIRECTCMD]
+	ldr r1, =0x0A000000
+	str r1, [r0, #DMC_DIRECTCMD]
 
-	mov	r2, #0x3f0
+	/* minimum wait time is 1 micro seconds */
+	mov r2, #0x3f0
 	bl dmc_delay
+
+	ldr r1, =0x7110100A
+	str r1, [r0, #DMC_PHYCONTROL0]
+	ldr r1, =0x20000086
+	str r1, [r0, #DMC_PHYCONTROL1]
+	ldr r1, =0x7110100B
+	str r1, [r0, #DMC_PHYCONTROL0]
+
+	mov r2, #0x19000
+	bl	dmc_delay
+
+	ldr r1, =0x2000008E
+	str r1, [r0, #DMC_PHYCONTROL1]
+	ldr r1, =0x20000086
+	str r1, [r0, #DMC_PHYCONTROL1]
+
+	mov r2, #0x19000
+	bl	dmc_delay
+
+/***************************************************************/
+/*DREX0*********************************************************/
+/***************************************************************/
 
 
 	ldr	r0, =APB_DMC_0_BASE
 
-	ldr	r1, =0x7110100A
-	ldr	r2, =DMC_PHYCONTROL0
-	str	r1, [r0, r2]
+	ldr r1, [r0, #DMC_CONCONTROL]
+	orr r2, r1, #(1<<5)
+	str r2, [r0, #DMC_CONCONTROL]
 
-	ldr	r1, =0x20000086
-	ldr	r2, =DMC_PHYCONTROL1
-	str	r1, [r0, r2]
+	ldr r1, [r0, #DMC_MEMCONTROL]
+	orr r2, r1, #((1<<4) | (1<<1) | (0<<0))
+	str r2, [r0, #DMC_MEMCONTROL]
 
-	ldr	r1, =0x7110100B
-	ldr	r2, =DMC_PHYCONTROL0
-	str	r1, [r0, r2]
 
-	bl wait_phy_state
-
-	ldr	r1, =0x2000008E
-	ldr	r2, =DMC_PHYCONTROL1
-	str	r1, [r0, r2]
-	ldr	r1, =0x20000086
-	ldr	r2, =DMC_PHYCONTROL1
-	str	r1, [r0, r2]
-
-	bl wait_phy_state
+/***************************************************************/
+/*DREX1*********************************************************/
+/***************************************************************/
 
 	ldr	r0, =APB_DMC_1_BASE
 
-	ldr	r1, =0x7110100A
-	ldr	r2, =DMC_PHYCONTROL0
-	str	r1, [r0, r2]
+	ldr r1, [r0, #DMC_CONCONTROL]
+	orr r2, r1, #(1<<5)
+	str r2, [r0, #DMC_CONCONTROL]
 
-	ldr	r1, =0x20000086
-	ldr	r2, =DMC_PHYCONTROL1
-	str	r1, [r0, r2]
+	ldr r1, [r0, #DMC_MEMCONTROL]
+	orr r2, r1, #((1<<4) | (1<<1) | (0<<0))
+	str r2, [r0, #DMC_MEMCONTROL]
 
-	ldr	r1, =0x7110100B
-	ldr	r2, =DMC_PHYCONTROL0
-	str	r1, [r0, r2]
-
-	bl wait_phy_state
-
-	ldr	r1, =0x2000008E
-	ldr	r2, =DMC_PHYCONTROL1
-	str	r1, [r0, r2]
-	ldr	r1, =0x20000086
-	ldr	r2, =DMC_PHYCONTROL1
-	str	r1, [r0, r2]
-
-	bl wait_phy_state
-
-	ldr	r0, =APB_DMC_0_BASE
-	ldr	r2, =DMC_CONCONTROL
-	ldr	r1, [r0, r2]
-	orr r1, r1, #(1 << 5)
-	str r1, [r0, r2]
-
-	ldr	r0, =APB_DMC_1_BASE
-	ldr	r2, =DMC_CONCONTROL
-	ldr	r1, [r0, r2]
-	orr r1, r1, #(1 << 5)
-	str r1, [r0, r2]
-
-	ldr	r0, =APB_DMC_0_BASE
-	ldr	r2, =DMC_MEMCONTROL
-	ldr	r1, [r0, r2]
-	orr	r1, r1, #((1 << 4) | (1 << 1) | (1 << 0))
-	str	r1, [r0, r2]
-
-	ldr	r0, =APB_DMC_1_BASE
-	ldr	r2, =DMC_MEMCONTROL
-	ldr	r1, [r0, r2]
-	orr	r1, r1, #((1 << 4) | (1 << 1) | (1 << 0))
-	str	r1, [r0, r2]
-
-	pop {pc}
-
+	pop	{pc}

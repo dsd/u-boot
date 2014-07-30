@@ -200,10 +200,7 @@ int board_init(void)
 
 int dram_init(void)
 {
-	gd->ram_size	= get_ram_size((long *)PHYS_SDRAM_1, PHYS_SDRAM_1_SIZE)
-					+ get_ram_size((long *)PHYS_SDRAM_2, PHYS_SDRAM_2_SIZE)
-					+ get_ram_size((long *)PHYS_SDRAM_3, PHYS_SDRAM_3_SIZE)
-					+ get_ram_size((long *)PHYS_SDRAM_4, PHYS_SDRAM_4_SIZE);
+	//gd->ram_size = get_ram_size((long *)PHYS_SDRAM_1, PHYS_SDRAM_1_SIZE);
 
 	return 0;
 }
@@ -219,6 +216,14 @@ void dram_init_banksize(void)
 		gd->bd->bi_dram[2].size = PHYS_SDRAM_3_SIZE;
 		gd->bd->bi_dram[3].start = PHYS_SDRAM_4;
 		gd->bd->bi_dram[3].size = PHYS_SDRAM_4_SIZE;
+		gd->bd->bi_dram[4].start = PHYS_SDRAM_5;
+		gd->bd->bi_dram[4].size = PHYS_SDRAM_5_SIZE;
+		gd->bd->bi_dram[5].start = PHYS_SDRAM_6;
+		gd->bd->bi_dram[5].size = PHYS_SDRAM_6_SIZE;
+		gd->bd->bi_dram[6].start = PHYS_SDRAM_7;
+		gd->bd->bi_dram[6].size = PHYS_SDRAM_7_SIZE;
+		gd->bd->bi_dram[7].start = PHYS_SDRAM_8;
+		gd->bd->bi_dram[7].size = PHYS_SDRAM_8_SIZE;
 
 #ifdef CONFIG_TRUSTZONE
 	gd->bd->bi_dram[nr_dram_banks - 1].size -= CONFIG_TRUSTZONE_RESERVED_DRAM;

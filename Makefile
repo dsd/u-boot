@@ -160,9 +160,9 @@ ifeq ($(HOSTARCH),$(ARCH))
 CROSS_COMPILE ?=
 endif
 
-ifeq ($(ARCH),arm)
-CROSS_COMPILE = /opt/toolchains/arm-2009q3/bin/arm-none-linux-gnueabi-
-endif
+#ifeq ($(ARCH),arm)
+#CROSS_COMPILE = /opt/toolchains/arm-2009q3/bin/arm-none-linux-gnueabi-
+#endif
 
 # load other configuration
 include $(TOPDIR)/config.mk

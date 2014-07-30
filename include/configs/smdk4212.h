@@ -36,12 +36,16 @@
 #define CONFIG_SAMSUNG		1	/* in a SAMSUNG core */
 #define CONFIG_S5P		1	/* which is in a S5P Family */
 #define CONFIG_CPU_EXYNOS4X12	1	/* which is in a Exynos4X12 */
-#define CONFIG_S5PC210		1	/* which is in a S5PC100 */
+#define CONFIG_S5PC210		1	/* which is in a S5PC210 */
 #define CONFIG_S5PC220		1	/* which is in a S5PC220 */
 #define CONFIG_SMDKC210		1
 #define CONFIG_SMDKC220		1
 #define CONFIG_EXYNOS4212	1
+#define CONFIG_EXYNOS4412	1
 #define CONFIG_EXYNOS4412_EVT1	1
+//#define CONFIG_EXYNOS4412_EVT2	1
+#define CONFIG_W30_DVT 1
+//#define CONFIG_FLASH_SD_FUSE 1
 
 //#define CONFIG_S5M8767A
 
@@ -70,33 +74,41 @@
 
 //#include <asm/arch/cpu.h>		/* get chip and board defs */
 
+/* APLL : 800MHz */
+//#define CONFIG_CLK_ARM_800_APLL_800
 /* APLL : 1GHz */
-#define CONFIG_CLK_ARM_1000
-/* APLL : 1.5GHz */
-//#define CONFIG_CLK_ARM_1500
+#define CONFIG_CLK_ARM_1000_APLL_1000
+/* APLL : 1.1GHz */
+//#define CONFIG_CLK_ARM_1200_APLL_1100
 /* APLL : 1.2GHz */
-//#define CONFIG_CLK_ARM_1200
-/* APLL : 8GHz */
-//#define CONFIG_CLK_ARM_800
-/* APLL : 4GHz */
-//#define CONFIG_CLK_ARM_400
-/* APLL : 2GHz */
-//#define CONFIG_CLK_ARM_200
+//#define CONFIG_CLK_ARM_1200_APLL_1200
+/* APLL : 1.3GHz */
+//#define CONFIG_CLK_ARM_1200_APLL_1300
+/* APLL : 1.4GHz */
+//#define CONFIG_CLK_ARM_1200_APLL_1400
+/* APLL : 1.5GHz */
+//#define CONFIG_CLK_ARM_1500_APLL_1500
 
+#ifdef CONFIG_EXYNOS4412_EVT2
+/* bus clock: 220Mhz, DMC clock 440Mhz */
+#define CONFIG_CLK_BUS_DMC_220_440
+#else
 /* bus clock: 100Mhz, DMC clock 200Mhz */
 //#define CONFIG_CLK_BUS_DMC_100_200
 /* bus clock: 165Mhz, DMC clock 330Mhz */
 //#define CONFIG_CLK_BUS_DMC_165_330
 /* bus clock: 200Mhz, DMC clock 400Mhz */
 #define CONFIG_CLK_BUS_DMC_200_400
+/* bus clock: 220Mhz, DMC clock 440Mhz */
+//#define CONFIG_CLK_BUS_DMC_220_440
+#endif
 
-/* IV_SIZE: 128 byte, 2 port(1 Gbyte), open page, ttrd: 4 */
+/* IV_SIZE: 128 byte, 2 port(1 Gbyte), open page, trrd: 4 */
 #define CONFIG_EVT0_PERFORMANCE
-/* IV_SIZE: 512 Mbyte, 1 port(512 Mbyte), open page, ttrd: 4 */
+/* IV_SIZE: 512 Mbyte, 1 port(512 Mbyte), open page, trrd: 4 */
 //#define CONFIG_EVT0_STABLE
-/* IV_SIZE: 128 byte, 2 port(1 Gbyte), close page, ttrd: 0xA */
+/* IV_SIZE: 128 byte, 2 port(1 Gbyte), close page, trrd: 0xA */
 //#define CONFIG_EVT0_RECOMMEND
-
 
 /* (Memory Interleaving Size = 1 << IV_SIZE) */
 #ifdef CONFIG_EVT0_STABLE
@@ -131,13 +143,13 @@
 
 /* Power Management is enabled */
 #define CONFIG_PM
-#define CONFIG_PM_VDD_ARM	1.1
+#define CONFIG_PM_VDD_ARM	1.2
 #define CONFIG_PM_VDD_INT	1.0
 #define CONFIG_PM_VDD_G3D	1.1
 #define CONFIG_PM_VDD_MIF	1.1
 #define CONFIG_PM_VDD_LDO14	1.8
 
-
+#define CONFIG_RAM_CONSOLE_LEN	(4*1024*1024)	// 4*1024 MB
 /*
  * Size of malloc() pool
  * 1MB = 0x100000, 0x100000 = 1024 * 1024
@@ -190,6 +202,9 @@
 #define CONFIG_CMD_EXT2
 #define CONFIG_CMD_FAT
 
+#define CONFIG_MD5
+#define CONFIG_CMD_MD5SUM
+
 #define CONFIG_SYS_NAND_QUIET_TEST
 #define CONFIG_SYS_ONENAND_QUIET_TEST
 
@@ -219,11 +234,14 @@
 
 #define CONFIG_BOOTDELAY	3
 /* Default boot commands for Android booting. */
+#define CONFIG_BOOTCOMMAND	"run reserved;movi read kernel 0 40008000;movi read rootfs 0 41000000;bootm 40008000 41000000"
+/*
 #ifdef CONFIG_SECURE_BOOT
-#define CONFIG_BOOTCOMMAND	"emmc open 0; movi read zero fwbl1 0 40000000; emmc close 0; movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
+#define CONFIG_BOOTCOMMAND	"emmc open 0; movi read fwbl1 0 40000000; emmc close 0; movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
 #else
 #define CONFIG_BOOTCOMMAND	"movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
 #endif
+*/
 #define CONFIG_BOOTARGS	""
 
 #define CONFIG_BOOTCOMMAND2	\
@@ -242,9 +260,36 @@
 		"mmc read 1 48000000 160000 a0000;"					\
 		"fastboot flash cache 48000000;"					\
 		"reset"
-
+/*
 #define CONFIG_BOOTCOMMAND3	"ext3format mmc 0:3;ext3format mmc 0:4;"		\
 				"movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"
+*/
+#define CONFIG_BOOTCMD_FUSE_BOOTLOADER	\
+		"mmc erase boot 0 0 4096;"	\
+		"mmc erase user 0 0 400000000;"	\
+		"movi r f 1 41000000;"	\
+		"movi r b 1 41100000;"	\
+		"movi r u 1 41200000;"	\
+		"movi r t 1 41300000;"	\
+		"emmc open 0;"	\
+		"movi w z f 0 41000000;"	\
+		"movi w z b 0 41100000;"	\
+		"movi w z u 0 41200000;"	\
+		"movi w z t 0 41300000;"	\
+		"emmc close 0;"
+
+#define CONFIG_BOOTCMD_FUSE_RELEASE	\
+		"if mmc read 1 47000000 1000 8; then source 47000000; fi;"	\
+		"if ext2load mmc 1:2 47000000 /mprelease.img 1000; then source 47000000; fi;"	\
+		"if fatload mmc 1:1 47000000 /mprelease.img 1000; then source 47000000; fi;" \
+		"env default -f; " \
+		"env save; "\
+		"sdfuse flashall"
+
+#define CONFIG_BOOTCMD_RECOVERY	\
+		"movi read recoverykernel 0 40008000;" \
+		"movi read recovery 0 41000000;" \
+		"bootm 40008000 41000000"
 
 /*
  * Miscellaneous configurable options
@@ -252,7 +297,7 @@
 #define CONFIG_SYS_LONGHELP		/* undef to save memory */
 #define CONFIG_SYS_HUSH_PARSER		/* use "hush" command parser	*/
 #define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
-#define CONFIG_SYS_PROMPT		"SMDK4212 # "
+#define CONFIG_SYS_PROMPT		"SMDK4412 # "
 #define CONFIG_SYS_CBSIZE	256	/* Console I/O Buffer Size */
 #define CONFIG_SYS_PBSIZE	384	/* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS	16	/* max number of command args */
@@ -274,10 +319,11 @@
  */
 #define CONFIG_STACKSIZE	(256 << 10)	/* 256 KiB */
 
+
 #ifdef CONFIG_EVT0_STABLE
 #define CONFIG_NR_DRAM_BANKS	2
 #else
-#define CONFIG_NR_DRAM_BANKS	4
+#define CONFIG_NR_DRAM_BANKS	8
 #endif
 #define SDRAM_BANK_SIZE         0x10000000    /* 256 MB */
 #define PHYS_SDRAM_1            CONFIG_SYS_SDRAM_BASE /* SDRAM Bank #1 */
@@ -305,9 +351,9 @@
 #define CONFIG_SYS_NO_FLASH		1
 
 #define CONFIG_SYS_MONITOR_LEN		(256 << 10)	/* 256 KiB */
-#define CONFIG_IDENT_STRING		" for SMDK4212"
+#define CONFIG_IDENT_STRING		" for SMDK4412"
 
-#define CONFIG_ENABLE_MMU
+//#define CONFIG_ENABLE_MMU
 
 #ifdef CONFIG_ENABLE_MMU
 #define CONFIG_SYS_MAPPED_RAM_BASE	0xc0000000
@@ -321,16 +367,16 @@
 #define CONFIG_PHY_UBOOT_BASE		CONFIG_SYS_SDRAM_BASE + 0x3e00000
 
 /*
- *  Fast Boot 
+ *  Fast Boot
 */
 /* Fastboot variables */
 #define CFG_FASTBOOT_TRANSFER_BUFFER            (0x48000000)
-#define CFG_FASTBOOT_TRANSFER_BUFFER_SIZE       (0x10000000)   /* 256MB */
+#define CFG_FASTBOOT_TRANSFER_BUFFER_SIZE       (0x19000000)   /* 400MB */
 #define CFG_FASTBOOT_ADDR_KERNEL                (0x40008000)
 #define CFG_FASTBOOT_ADDR_RAMDISK               (0x40800000)
 #define CFG_FASTBOOT_PAGESIZE                   (2048)  // Page size of booting device
 #define CFG_FASTBOOT_SDMMC_BLOCKSIZE            (512)   // Block size of sdmmc
-#define CFG_PARTITION_START			(0x4000000)
+#define CFG_PARTITION_START			(0x6400000)
 
 /* Just one BSP type should be defined. */
 #if defined(CONFIG_CMD_ONENAND) | defined(CONFIG_CMD_NAND) | defined(CONFIG_CMD_MOVINAND)
@@ -351,7 +397,7 @@
  * machine type
  */
 
-#define MACH_TYPE_C220		3698	/* SMDKC210 machine ID */
+#define MACH_TYPE_C220		3765	/* SMDKC210 machine ID */
 
 #define CONFIG_ENV_OFFSET		0x0007C000
 
@@ -367,6 +413,7 @@
 #define BOOT_SEC_DEV		0x5
 #define BOOT_EMMC		0x6
 #define BOOT_EMMC_4_4		0x7
+#define BOOT_USB		0x8
 
 /* Boot device */
 #define SDMMC_CH2		0x0
@@ -437,10 +484,28 @@
 #define CONFIG_BOOT_ONENAND_IROM
 #define CONFIG_NAND
 #define CONFIG_BOOT_NAND
+#define CONFIG_FASTBOOT_SDFUSE                  "sdfuse flashall"
 
 #define CFG_PHY_UBOOT_BASE	MEMORY_BASE_ADDRESS + 0x3e00000
 #define CFG_PHY_KERNEL_BASE	MEMORY_BASE_ADDRESS + 0x8000
 
 #define MEMORY_BASE_ADDRESS	0x40000000
+/*-----LCD---------*/
+#define CONFIG_LOGO_DISPLAY
+
+#ifdef CONFIG_LOGO_DISPLAY
+#define CFG_LCD_NONAME1
+#define CFG_LCD_FBUFFER				(0x6c000000)
+#define PART_SIZE_LOGO		(80*1024) // 80KB
+#define CFG_MAX_LOGO_NUM			6 // 6 pic to show
+#define LOGO_PARTITION_START (14*1024*1024) 
+
+#define BOOT_LOGO 		0  	
+#define BATTERY_LOGO 	1
+#define	RECOVERY_LOGO 	4  
+#define UPDATING_LOGO 	5
+
+#endif
+
 
 #endif	/* __CONFIG_H */

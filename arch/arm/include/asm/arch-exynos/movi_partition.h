@@ -29,7 +29,7 @@
 #endif
 #define PART_SIZE_BL1		(16 * 1024)
 #ifdef CONFIG_TRUSTZONE
-#define PART_SIZE_UBOOT		(328 * 1024)
+#define PART_SIZE_UBOOT		(1024 * 1024)
 #else
 #define PART_SIZE_UBOOT		(512 * 1024)
 #endif

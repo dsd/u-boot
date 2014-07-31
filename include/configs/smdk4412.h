@@ -233,8 +233,23 @@
 #define CONFIG_GATEWAYIP	192.168.0.1
 
 #define CONFIG_BOOTDELAY	1
-/* Default boot commands for Android booting. */
-#define CONFIG_BOOTCOMMAND	"run reserved;movi read kernel 0 40008000;movi read rootfs 0 41000000;bootm 40008000 41000000"
+#define CONFIG_BOOTCOMMAND \
+        " if run loadbootenv; then " 		\
+        " 	run importbootenv;" 		\
+        " else " 				\
+        "  	if run loadbootscript_1; "      \
+        "     		then run bootscript; "  \
+        " 	else "				\
+        "         	run default_bootcmd; "  \
+        "     	 fi ;"                          \
+        " fi ; "				\
+        " run uenvbootcmd; "
+
+#define CONFIG_EXTRA_ENV_SETTINGS \
+    "loadbootenv=echo >>> Load Boot Script from mmc 0:1 <<<;ext2load mmc 0:1 40008000 uEnv.txt\0" \
+    "importbootenv=echo >>> Importing environment from mmc 0:1 <<<;env import -t 40008000 ${filesize}\0" \
+    "uenvbootcmd=ext2load mmc 0:1 0x40007000 ${kernel_image};ext2load mmc 0:1 0x42000000 ${ramdisk_image};bootm 0x40007000 0x42000000\0"
+
 /*
 #ifdef CONFIG_SECURE_BOOT
 #define CONFIG_BOOTCOMMAND	"emmc open 0; movi read fwbl1 0 40000000; emmc close 0; movi read kernel 0 40008000;movi read rootfs 0 41000000 100000;bootm 40008000 41000000"

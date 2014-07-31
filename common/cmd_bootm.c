@@ -599,7 +599,7 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 #ifdef CONFIG_ZIMAGE_BOOT
 #define LINUX_ZIMAGE_MAGIC	0x016f2818
-	image_header_t	*hdr;
+	image_header_t	*hdr = NULL;
 	ulong		addr;
 
 	/* find out kernel image address */
@@ -723,8 +723,10 @@ int do_bootm (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 #if defined(CONFIG_ZIMAGE_BOOT)
 after_header_check:
+    if (hdr) {
 	images.os.os = hdr->ih_os;
 	images.ep = image_get_ep (&images.legacy_hdr_os_copy);
+	}
 #endif
 
 #ifdef CONFIG_SILENT_CONSOLE

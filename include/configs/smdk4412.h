@@ -338,7 +338,7 @@
 #ifdef CONFIG_EVT0_STABLE
 #define CONFIG_NR_DRAM_BANKS	2
 #else
-#define CONFIG_NR_DRAM_BANKS	4
+#define CONFIG_NR_DRAM_BANKS	8
 #endif
 #define SDRAM_BANK_SIZE         0x10000000    /* 256 MB */
 #define PHYS_SDRAM_1            CONFIG_SYS_SDRAM_BASE /* SDRAM Bank #1 */

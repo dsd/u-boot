@@ -723,7 +723,7 @@ void pmic_init(void)
 
 		/* Audio: LDO5 CTRL1 1.8 V */
 		IIC0_EWrite(MAX77686_ADDR, 0x44, 0xD4);
-		/* Audio: LDO9 CTRL1 1.8 V */
+		/* Audio: LDO9 CTRL1 1.8 V.. FIXME: not used on Sqwerty, disable? */
 		IIC0_EWrite(MAX77686_ADDR, 0x48, 0xD4);
 		/* Audio: LDO17 CTR:1 1/8V */
 		IIC0_EWrite(MAX77686_ADDR, 0x50, 0xD4);
@@ -734,9 +734,9 @@ void pmic_init(void)
 		/* Audio: Set the EN32KHCP Register: For audio codec hp detection */
 		IIC0_EWrite(MAX77686_ADDR, 0x7f, 0x03);
 
-		/* LDO23 CTRL1 3.3 V*/
+		/* Wifi/BT: LDO23 CTRL1 3.3 V*/
 		IIC0_EWrite(MAX77686_ADDR, 0x56, 0xF2);
-		/* LDO24 CTRL1 3.3 V*/
+		/* Ethernet: LDO24 CTRL1 3.3 V*/
 		IIC0_EWrite(MAX77686_ADDR, 0x57, 0xF2);
 
 		/*Set MRSTB Register: Program the Manual Reset ON/OFF and Debounce Timer*/

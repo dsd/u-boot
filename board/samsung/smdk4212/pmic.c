@@ -729,8 +729,8 @@ void pmic_init(void)
 		IIC0_EWrite(MAX77686_ADDR, 0x50, 0xD4);
                /* Audio: LDO18 CTR:1 1/2V */
                IIC0_EWrite(MAX77686_ADDR, 0x51, 0xC8);
-		/* Audio: LDO25 CTRL1 2.8V */
-		IIC0_EWrite(MAX77686_ADDR, 0x58, 0xE8);
+		/* HDMI/VGA: LDO25 3.3V */
+		IIC0_EWrite(MAX77686_ADDR, 0x58, 0xF2);
 		/* Audio: Set the EN32KHCP Register: For audio codec hp detection */
 		IIC0_EWrite(MAX77686_ADDR, 0x7f, 0x03);
 
